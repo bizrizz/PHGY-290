@@ -15,16 +15,16 @@
       text-align: center;
     }
 
-    /* A main wrapper that centers everything vertically */
+    /* Main container: fills entire window, centers content vertically */
     .container {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100%;
+      width: 100%;
       box-sizing: border-box;
-      max-width: 800px;
-      margin: 0 auto;
+      /* no max-width or margin auto */
       padding: 20px;
     }
 
@@ -33,7 +33,6 @@
       padding: 0;
     }
 
-    /* Mode Buttons */
     button {
       background-color: #6fa8dc;
       color: white;
@@ -52,7 +51,7 @@
       display: none;
     }
 
-    /* Make each screen fill vertical space nicely */
+    /* Each screen fills vertical space */
     .screen {
       display: flex;
       flex-direction: column;
@@ -62,19 +61,18 @@
       height: 100%;
     }
 
-    /* Big, full-page question text */
+    /* Large, full-width question text */
     #questionText {
-      font-size: 2.2em;  /* adjust as you see fit */
+      font-size: 2.5em;  /* adjust as desired */
       font-weight: 600;
-      margin: 0 0 30px;
-      max-width: 90%;
       line-height: 1.3em;
+      margin: 0 0 30px;
+      /* no max-width so it can span entire page */
     }
 
     /* Progress bar styling */
     .progressBar {
-      width: 80%;
-      max-width: 500px;
+      width: 100%;           /* take full width */
       height: 20px;
       background-color: #fff;
       border-radius: 5px;
@@ -90,20 +88,19 @@
       transition: width 0.2s;
     }
 
-    /* Wave container (fake recording animation) */
+    /* Wave container for fake recording animation */
     .wave-container {
       display: flex;
       justify-content: center;
       align-items: flex-end;
-      height: 50px;
+      width: 100%;       /* fill entire container width */
+      height: 80px;      /* taller wave area */
       margin: 15px 0;
-      width: 80%;    /* so it’s not too wide */
-      max-width: 500px;
     }
     .wave-bar {
-      width: 6px;
+      width: 8px;        /* slightly wider bars */
       background-color: #6fa8dc;
-      margin: 0 3px;
+      margin: 0 5px;
       border-radius: 3px;
       height: 20%;
       transition: height 0.2s ease-in-out;
@@ -111,13 +108,12 @@
 
     #statusMessage {
       margin-top: 10px;
-      font-size: 14px;
+      font-size: 16px;
       color: #555;
       min-height: 24px;
     }
   </style>
 </head>
-
 <body>
 <div class="container">
 
@@ -211,7 +207,6 @@ function shuffleArray(arr) {
   }
   return arr;
 }
-
 // Shuffle, then pick subsets
 shuffleArray(fullQuestionBank);
 const RAPID_QUESTIONS = fullQuestionBank.slice(0, 12);
@@ -252,7 +247,7 @@ function initMode(selectedMode) {
   questionIndex = 0;
   isRecording = false;
 
-  // Hide all sections
+  // Hide all screens
   welcomeScreen.classList.add("hidden");
   rapidIntro.classList.add("hidden");
   questionScreen.classList.add("hidden");
@@ -260,11 +255,9 @@ function initMode(selectedMode) {
 
   if (mode === "rapid") {
     questionList = RAPID_QUESTIONS;
-    // Show rapid intro
     rapidIntro.classList.remove("hidden");
   } else {
     questionList = SLOWER_QUESTIONS;
-    // Immediately load the first question
     if (questionList.length > 0) {
       setupSlowerQuestion(0);
     }
@@ -290,7 +283,7 @@ function stopWaveAnimation() {
     waveInterval = null;
   }
   waveContainer.classList.add("hidden");
-  // Reset bars
+  // Reset bars to default
   const bars = document.querySelectorAll(".wave-bar");
   bars.forEach(bar => bar.style.height = "20%");
 }
@@ -306,27 +299,23 @@ function startRapidMode() {
 
 function showRapidQuestion(idx) {
   if (idx >= questionList.length) {
-    // Done
     showThanks();
     return;
   }
   const question = questionList[idx];
   questionTextEl.textContent = question;
-
   progressFill.style.width = "0%";
   statusMessage.textContent = "Recording...";
   isRecording = true;
 
-  // Hide slower mode button
-  startStopBtn.classList.add("hidden");
-
+  startStopBtn.classList.add("hidden"); // Hide slower mode button
   startWaveAnimation();
 
-  let totalTime = 10; // seconds for each question
+  let totalTime = 10; // seconds per question
   let elapsed = 0;
   let timerId = setInterval(() => {
     elapsed++;
-    const pct = (elapsed / totalTime) * 100;
+    let pct = (elapsed / totalTime) * 100;
     progressFill.style.width = pct + "%";
 
     if (elapsed >= totalTime) {
@@ -351,7 +340,7 @@ function setupSlowerQuestion(idx) {
   startStopBtn.classList.remove("hidden");
   startStopBtn.disabled = false;
   startStopBtn.textContent = "Start Recording";
-  stopWaveAnimation(); // ensure wave is off
+  stopWaveAnimation();
 }
 
 function toggleSlowerRecording() {
@@ -369,13 +358,13 @@ function toggleSlowerRecording() {
     startStopBtn.textContent = "Recording Stopped";
     statusMessage.textContent = "Wait 30 seconds...";
 
-    // 30-second cooldown
     let totalTime = 30;
     let elapsed = 0;
     let cdTimer = setInterval(() => {
       elapsed++;
       let pct = (elapsed / totalTime) * 100;
       progressFill.style.width = pct + "%";
+
       if (elapsed >= totalTime) {
         clearInterval(cdTimer);
         questionIndex++;
