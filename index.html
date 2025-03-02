@@ -2,20 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Randomized Interview (Fake Recording)</title>
+  <title>Interview</title>
   <style>
-    /* Basic page styling */
     body {
       font-family: "Segoe UI", Tahoma, sans-serif;
-      margin: 0;
+      margin: 0; 
       padding: 0;
       background: linear-gradient(to bottom right, #e8ebf0, #ffffff);
       color: #333;
       text-align: center;
-    }
-    h1, h2, p {
-      margin: 10px auto;
-      padding: 0;
     }
     .container {
       max-width: 600px;
@@ -24,6 +19,10 @@
       padding: 20px 30px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       border-radius: 8px;
+    }
+    h1, h2, p {
+      margin: 10px auto;
+      padding: 0;
     }
     button {
       background-color: #6fa8dc;
@@ -38,9 +37,9 @@
     button:hover {
       background-color: #86c0f5;
     }
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
+
+    /* Progress bar */
     .progressBar {
       width: 100%;
       height: 20px;
@@ -57,67 +56,59 @@
       border-radius: 5px;
       transition: width 0.2s;
     }
-    #questionText {
-      font-weight: bold;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-    /* Wave animation container */
+
+    /* Wave container */
     .wave-container {
       display: flex;
       justify-content: center;
       align-items: flex-end;
-      height: 40px;
-      margin: 10px 0;
+      height: 50px;
+      margin: 15px 0;
     }
+    /* Each bar's style: we’ll animate height via JS */
     .wave-bar {
-      width: 5px;
+      width: 6px;
       background-color: #6fa8dc;
       margin: 0 3px;
-      animation: wave 1s infinite ease-in-out;
+      border-radius: 3px;
+      height: 20%;
+      transition: height 0.2s ease-in-out;
     }
-    .wave-bar:nth-child(1) { animation-delay: 0.0s; }
-    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
-    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
-    .wave-bar:nth-child(4) { animation-delay: 0.6s; }
-    .wave-bar:nth-child(5) { animation-delay: 0.8s; }
 
-    @keyframes wave {
-      0% { height: 20%; }
-      50% { height: 100%; }
-      100% { height: 20%; }
+    #questionText {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 5px;
     }
-    .footerMsg {
-      font-weight: bold;
-      margin-top: 20px;
-      color: #777;
+    #statusMessage {
+      margin-top: 10px;
       font-size: 14px;
+      color: #555;
+      min-height: 24px;
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>Randomized Interview</h1>
-
   <!-- Welcome Screen -->
   <div id="welcomeScreen">
-    <p>Choose Your Interview Mode:</p>
-    <button id="rapidBtn">Rapid Fire Mode</button>
-    <button id="slowerBtn">Open-Ended Mode</button>
+    <h2>Choose Your Interview Mode</h2>
+    <button id="rapidBtn">Rapid Fire</button>
+    <button id="slowerBtn">Open-Ended</button>
   </div>
 
   <!-- Rapid Intro Screen -->
   <div id="rapidIntro" class="hidden">
     <h2>Rapid Mode</h2>
-    <p>Press the button to start the rapid-fire questions.</p>
-    <button id="startRapidInterviewBtn">Start Interview (Rapid)</button>
+    <p>Press the button to begin.</p>
+    <button id="startRapidInterviewBtn">Start</button>
   </div>
 
   <!-- Question Screen (Used by both modes) -->
   <div id="questionScreen" class="hidden">
     <div id="questionText"></div>
 
-    <!-- Fake waveform (hidden when not "recording") -->
+    <!-- Wave animation container -->
     <div class="wave-container hidden" id="waveContainer">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -129,25 +120,20 @@
     <div class="progressBar">
       <div class="progressFill" id="progressFill"></div>
     </div>
-    <p id="statusMessage"></p>
 
+    <p id="statusMessage"></p>
     <!-- For Slower Mode Start/Stop -->
     <button id="startStopBtn" class="hidden">Start Recording</button>
   </div>
 
   <!-- Thank You Screen -->
   <div id="thanksScreen" class="hidden">
-    <h2>Thank you for completing the survey!</h2>
-  </div>
-
-  <div class="footerMsg">
-    This demo does NOT record audio. It only simulates recording with a wave animation.
+    <h2>Thank you!</h2>
   </div>
 </div>
 
 <script>
-/* -------------- QUESTION BANK & RANDOMIZER -------------- */
-
+/* -------------------- QUESTIONS & RANDOMIZATION -------------------- */
 const fullQuestionBank = [
   "What’s a small habit that’s had a big impact on your life?",
   "If you had to sum up your personality in three words, what would they be?",
@@ -194,12 +180,12 @@ function shuffleArray(arr) {
   return arr;
 }
 
-// Shuffle and pick subsets
+// Shuffle and pick subsets for each mode
 shuffleArray(fullQuestionBank);
 const RAPID_QUESTIONS = fullQuestionBank.slice(0, 12);
 const SLOWER_QUESTIONS = fullQuestionBank.slice(12, 17);
 
-/* -------------- DOM ELEMENTS -------------- */
+/* -------------------- DOM ELEMENTS -------------------- */
 const welcomeScreen = document.getElementById("welcomeScreen");
 const rapidIntro = document.getElementById("rapidIntro");
 const questionScreen = document.getElementById("questionScreen");
@@ -215,27 +201,26 @@ const progressFill = document.getElementById("progressFill");
 const statusMessage = document.getElementById("statusMessage");
 const startStopBtn = document.getElementById("startStopBtn");
 
-/* -------------- STATE -------------- */
+/* -------------------- STATE -------------------- */
 let mode = null; // 'rapid' or 'slower'
 let questionIndex = 0;
 let questionList = [];
 let isRecording = false;
-let countdownTimer = null;
-let countdownValue = 0;
+let waveInterval = null;
 
-/* -------------- EVENT LISTENERS -------------- */
-rapidBtn.onclick = () => initiateSurvey("rapid");
-slowerBtn.onclick = () => initiateSurvey("slower");
-startRapidInterviewBtn.onclick = startRapidQuestions;
+/* -------------------- EVENT LISTENERS -------------------- */
+rapidBtn.onclick = () => initMode("rapid");
+slowerBtn.onclick = () => initMode("slower");
+startRapidInterviewBtn.onclick = startRapidMode;
 startStopBtn.onclick = toggleSlowerRecording;
 
-/* -------------- MODE SETUP -------------- */
-function initiateSurvey(selectedMode) {
+/* -------------------- MODE SETUP -------------------- */
+function initMode(selectedMode) {
   mode = selectedMode;
   questionIndex = 0;
   isRecording = false;
 
-  // Hide all screens
+  // Hide all sections
   welcomeScreen.classList.add("hidden");
   rapidIntro.classList.add("hidden");
   questionScreen.classList.add("hidden");
@@ -247,126 +232,127 @@ function initiateSurvey(selectedMode) {
     rapidIntro.classList.remove("hidden");
   } else {
     questionList = SLOWER_QUESTIONS;
-    // Go directly to first question if we have any
+    // Immediately load the first question
     if (questionList.length > 0) {
       setupSlowerQuestion(0);
     }
   }
 }
 
-/* -------------- RAPID MODE FLOW -------------- */
-function startRapidQuestions() {
+/* -------------------- WAVE ANIMATION -------------------- */
+function startWaveAnimation() {
+  waveContainer.classList.remove("hidden");
+  waveInterval = setInterval(() => {
+    const bars = document.querySelectorAll(".wave-bar");
+    bars.forEach(bar => {
+      // random height between 20% and 100%
+      let h = Math.floor(Math.random() * 80) + 20;
+      bar.style.height = h + "%";
+    });
+  }, 200);
+}
+
+function stopWaveAnimation() {
+  clearInterval(waveInterval);
+  waveInterval = null;
+  waveContainer.classList.add("hidden");
+  // Reset bars
+  const bars = document.querySelectorAll(".wave-bar");
+  bars.forEach(bar => bar.style.height = "20%");
+}
+
+/* -------------------- RAPID MODE -------------------- */
+function startRapidMode() {
   rapidIntro.classList.add("hidden");
   questionScreen.classList.remove("hidden");
 
   questionIndex = 0;
-  if (questionList.length > 0) {
-    showRapidQuestion(questionIndex);
-  }
+  showRapidQuestion(questionIndex);
 }
 
 function showRapidQuestion(idx) {
-  const q = questionList[idx];
-  questionTextEl.textContent = `Question ${idx + 1}: ${q}`;
+  if (idx >= questionList.length) {
+    // Done
+    showThanks();
+    return;
+  }
+  questionTextEl.textContent = questionList[idx];
   progressFill.style.width = "0%";
-  statusMessage.textContent = "Recording for 10 seconds... (Fake)";
-  waveContainer.classList.remove("hidden"); // show wave
+  statusMessage.textContent = "Recording...";
 
-  // Hide the slower mode button
-  startStopBtn.classList.add("hidden");
-
-  // Start "recording" simulation
   isRecording = true;
+  startStopBtn.classList.add("hidden");
+  startWaveAnimation();
 
-  let totalTime = 10; // 10 seconds
+  let totalTime = 10; // seconds
   let elapsed = 0;
   let intId = setInterval(() => {
     elapsed++;
-    let pct = (elapsed / totalTime) * 100;
+    const pct = (elapsed / totalTime) * 100;
     progressFill.style.width = pct + "%";
 
     if (elapsed >= totalTime) {
       clearInterval(intId);
-      finishRapidQuestion();
+      // stop
+      isRecording = false;
+      stopWaveAnimation();
+      statusMessage.textContent = "Moving to next question...";
+      setTimeout(() => {
+        questionIndex++;
+        showRapidQuestion(questionIndex);
+      }, 1500);
     }
   }, 1000);
 }
 
-function finishRapidQuestion() {
-  isRecording = false;
-  waveContainer.classList.add("hidden");
-  statusMessage.textContent = "Recording finished. Moving to next question...";
-
-  setTimeout(() => {
-    questionIndex++;
-    if (questionIndex < questionList.length) {
-      showRapidQuestion(questionIndex);
-    } else {
-      showThanks();
-    }
-  }, 2000);
-}
-
-/* -------------- SLOWER MODE FLOW -------------- */
+/* -------------------- SLOWER MODE -------------------- */
 function setupSlowerQuestion(idx) {
   questionScreen.classList.remove("hidden");
-  const q = questionList[idx];
-  questionTextEl.textContent = `Question ${idx + 1}: ${q}`;
+  questionTextEl.textContent = questionList[idx];
   progressFill.style.width = "0%";
-  statusMessage.textContent = "Press 'Start Recording' to begin (Fake).";
-  waveContainer.classList.add("hidden");
-  
-  // Show the start/stop button
+  statusMessage.textContent = "Press 'Start Recording' to begin.";
   startStopBtn.classList.remove("hidden");
   startStopBtn.disabled = false;
   startStopBtn.textContent = "Start Recording";
+  stopWaveAnimation(); // ensure wave is hidden
 }
 
 function toggleSlowerRecording() {
   if (!isRecording) {
-    // Start recording
+    // start
     isRecording = true;
-    waveContainer.classList.remove("hidden");
-    statusMessage.textContent = "Recording... (Fake)";
     startStopBtn.textContent = "Stop Recording";
+    statusMessage.textContent = "Recording...";
+    startWaveAnimation();
   } else {
-    // Stop recording
+    // stop
     isRecording = false;
-    waveContainer.classList.add("hidden");
+    stopWaveAnimation();
     startStopBtn.disabled = true;
     startStopBtn.textContent = "Recording Stopped";
-    statusMessage.textContent = "Waiting 30 seconds before next question...";
+    statusMessage.textContent = "Wait 30 seconds...";
 
-    // Start 30-second countdown
-    doSlowerCountdown(30);
+    // 30-second cooldown
+    let totalTime = 30;
+    let elapsed = 0;
+    let intId = setInterval(() => {
+      elapsed++;
+      let pct = (elapsed / totalTime) * 100;
+      progressFill.style.width = pct + "%";
+      if (elapsed >= totalTime) {
+        clearInterval(intId);
+        questionIndex++;
+        if (questionIndex < questionList.length) {
+          setupSlowerQuestion(questionIndex);
+        } else {
+          showThanks();
+        }
+      }
+    }, 1000);
   }
 }
 
-function doSlowerCountdown(seconds) {
-  countdownValue = seconds;
-  let elapsed = 0;
-  let intervalId = setInterval(() => {
-    elapsed++;
-    let pct = (elapsed / seconds) * 100;
-    progressFill.style.width = pct + "%";
-
-    if (elapsed >= seconds) {
-      clearInterval(intervalId);
-      goToNextSlowerQuestion();
-    }
-  }, 1000);
-}
-
-function goToNextSlowerQuestion() {
-  questionIndex++;
-  if (questionIndex < questionList.length) {
-    setupSlowerQuestion(questionIndex);
-  } else {
-    showThanks();
-  }
-}
-
-/* -------------- THANK YOU -------------- */
+/* -------------------- THANKS -------------------- */
 function showThanks() {
   questionScreen.classList.add("hidden");
   thanksScreen.classList.remove("hidden");
