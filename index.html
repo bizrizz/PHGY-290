@@ -4,26 +4,36 @@
   <meta charset="UTF-8" />
   <title>Interview</title>
   <style>
-    body {
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      margin: 0; 
+    /* Fill the entire viewport and center items */
+    html, body {
+      margin: 0;
       padding: 0;
+      height: 100%;
+      font-family: "Segoe UI", Tahoma, sans-serif;
       background: linear-gradient(to bottom right, #e8ebf0, #ffffff);
       color: #333;
       text-align: center;
     }
+
+    /* A main wrapper that centers everything vertically */
     .container {
-      max-width: 600px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 20px 30px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      box-sizing: border-box;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
     }
+
     h1, h2, p {
       margin: 10px auto;
       padding: 0;
     }
+
+    /* Mode Buttons */
     button {
       background-color: #6fa8dc;
       color: white;
@@ -37,15 +47,38 @@
     button:hover {
       background-color: #86c0f5;
     }
-    .hidden { display: none; }
 
-    /* Progress bar */
-    .progressBar {
+    .hidden {
+      display: none;
+    }
+
+    /* Make each screen fill vertical space nicely */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       width: 100%;
+      height: 100%;
+    }
+
+    /* Big, full-page question text */
+    #questionText {
+      font-size: 2.2em;  /* adjust as you see fit */
+      font-weight: 600;
+      margin: 0 0 30px;
+      max-width: 90%;
+      line-height: 1.3em;
+    }
+
+    /* Progress bar styling */
+    .progressBar {
+      width: 80%;
+      max-width: 500px;
       height: 20px;
       background-color: #fff;
       border-radius: 5px;
-      margin: 10px 0;
+      margin: 20px 0 10px;
       position: relative;
       border: 1px solid #ccc;
     }
@@ -57,15 +90,16 @@
       transition: width 0.2s;
     }
 
-    /* Wave container */
+    /* Wave container (fake recording animation) */
     .wave-container {
       display: flex;
       justify-content: center;
       align-items: flex-end;
       height: 50px;
       margin: 15px 0;
+      width: 80%;    /* so it’s not too wide */
+      max-width: 500px;
     }
-    /* Each bar's style: we’ll animate height via JS */
     .wave-bar {
       width: 6px;
       background-color: #6fa8dc;
@@ -75,11 +109,6 @@
       transition: height 0.2s ease-in-out;
     }
 
-    #questionText {
-      font-size: 18px;
-      font-weight: 500;
-      margin-top: 5px;
-    }
     #statusMessage {
       margin-top: 10px;
       font-size: 14px;
@@ -88,27 +117,30 @@
     }
   </style>
 </head>
+
 <body>
 <div class="container">
+
   <!-- Welcome Screen -->
-  <div id="welcomeScreen">
+  <div id="welcomeScreen" class="screen">
     <h2>Choose Your Interview Mode</h2>
-    <button id="rapidBtn">Rapid Fire</button>
-    <button id="slowerBtn">Open-Ended</button>
+    <div>
+      <button id="rapidBtn">Rapid Fire</button>
+      <button id="slowerBtn">Open-Ended</button>
+    </div>
   </div>
 
   <!-- Rapid Intro Screen -->
-  <div id="rapidIntro" class="hidden">
+  <div id="rapidIntro" class="screen hidden">
     <h2>Rapid Mode</h2>
     <p>Press the button to begin.</p>
     <button id="startRapidInterviewBtn">Start</button>
   </div>
 
   <!-- Question Screen (Used by both modes) -->
-  <div id="questionScreen" class="hidden">
+  <div id="questionScreen" class="screen hidden">
     <div id="questionText"></div>
 
-    <!-- Wave animation container -->
     <div class="wave-container hidden" id="waveContainer">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -122,12 +154,12 @@
     </div>
 
     <p id="statusMessage"></p>
-    <!-- For Slower Mode Start/Stop -->
+    <!-- Start/Stop Button for Slower Mode -->
     <button id="startStopBtn" class="hidden">Start Recording</button>
   </div>
 
   <!-- Thank You Screen -->
-  <div id="thanksScreen" class="hidden">
+  <div id="thanksScreen" class="screen hidden">
     <h2>Thank you!</h2>
   </div>
 </div>
@@ -180,7 +212,7 @@ function shuffleArray(arr) {
   return arr;
 }
 
-// Shuffle and pick subsets for each mode
+// Shuffle, then pick subsets
 shuffleArray(fullQuestionBank);
 const RAPID_QUESTIONS = fullQuestionBank.slice(0, 12);
 const SLOWER_QUESTIONS = fullQuestionBank.slice(12, 17);
@@ -253,8 +285,10 @@ function startWaveAnimation() {
 }
 
 function stopWaveAnimation() {
-  clearInterval(waveInterval);
-  waveInterval = null;
+  if (waveInterval) {
+    clearInterval(waveInterval);
+    waveInterval = null;
+  }
   waveContainer.classList.add("hidden");
   // Reset bars
   const bars = document.querySelectorAll(".wave-bar");
@@ -276,27 +310,30 @@ function showRapidQuestion(idx) {
     showThanks();
     return;
   }
-  questionTextEl.textContent = questionList[idx];
+  const question = questionList[idx];
+  questionTextEl.textContent = question;
+
   progressFill.style.width = "0%";
   statusMessage.textContent = "Recording...";
-
   isRecording = true;
+
+  // Hide slower mode button
   startStopBtn.classList.add("hidden");
+
   startWaveAnimation();
 
-  let totalTime = 10; // seconds
+  let totalTime = 10; // seconds for each question
   let elapsed = 0;
-  let intId = setInterval(() => {
+  let timerId = setInterval(() => {
     elapsed++;
     const pct = (elapsed / totalTime) * 100;
     progressFill.style.width = pct + "%";
 
     if (elapsed >= totalTime) {
-      clearInterval(intId);
-      // stop
+      clearInterval(timerId);
       isRecording = false;
       stopWaveAnimation();
-      statusMessage.textContent = "Moving to next question...";
+      statusMessage.textContent = "Next question...";
       setTimeout(() => {
         questionIndex++;
         showRapidQuestion(questionIndex);
@@ -310,11 +347,11 @@ function setupSlowerQuestion(idx) {
   questionScreen.classList.remove("hidden");
   questionTextEl.textContent = questionList[idx];
   progressFill.style.width = "0%";
-  statusMessage.textContent = "Press 'Start Recording' to begin.";
+  statusMessage.textContent = "Press 'Start Recording'.";
   startStopBtn.classList.remove("hidden");
   startStopBtn.disabled = false;
   startStopBtn.textContent = "Start Recording";
-  stopWaveAnimation(); // ensure wave is hidden
+  stopWaveAnimation(); // ensure wave is off
 }
 
 function toggleSlowerRecording() {
@@ -335,12 +372,12 @@ function toggleSlowerRecording() {
     // 30-second cooldown
     let totalTime = 30;
     let elapsed = 0;
-    let intId = setInterval(() => {
+    let cdTimer = setInterval(() => {
       elapsed++;
       let pct = (elapsed / totalTime) * 100;
       progressFill.style.width = pct + "%";
       if (elapsed >= totalTime) {
-        clearInterval(intId);
+        clearInterval(cdTimer);
         questionIndex++;
         if (questionIndex < questionList.length) {
           setupSlowerQuestion(questionIndex);
@@ -352,7 +389,7 @@ function toggleSlowerRecording() {
   }
 }
 
-/* -------------------- THANKS -------------------- */
+/* -------------------- THANK YOU -------------------- */
 function showThanks() {
   questionScreen.classList.add("hidden");
   thanksScreen.classList.remove("hidden");
