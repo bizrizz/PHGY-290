@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Interview</title>
   <style>
-    /* Fill the entire viewport and center items */
+    /* Use 100% of the viewport for body/html */
     html, body {
       margin: 0;
       padding: 0;
@@ -15,17 +15,28 @@
       text-align: center;
     }
 
-    /* Main container: fills entire window, centers content vertically */
+    /* .container fills the entire window and centers content */
     .container {
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100%;
-      width: 100%;
       box-sizing: border-box;
-      /* no max-width or margin auto */
-      padding: 20px;
+    }
+
+    /* Each screen also stretches to fill the container */
+    .screen {
+      width: 100%;
+      height: 100%;
+      display: none; /* hidden by default */
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .screen.active {
+      display: flex; /* show this screen */
     }
 
     h1, h2, p {
@@ -47,32 +58,40 @@
       background-color: #86c0f5;
     }
 
-    .hidden {
-      display: none;
-    }
-
-    /* Each screen fills vertical space */
-    .screen {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* Large, full-width question text */
+    /* Large question text */
     #questionText {
-      font-size: 2.5em;  /* adjust as desired */
+      font-size: 2.5em;
       font-weight: 600;
       line-height: 1.3em;
-      margin: 0 0 30px;
-      /* no max-width so it can span entire page */
+      margin-bottom: 30px;
     }
 
-    /* Progress bar styling */
+    /* Wave container */
+    .wave-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      width: 80%;  /* or 100% if you want the wave as wide as possible */
+      max-width: 800px;
+      height: 80px;
+      margin: 15px 0;
+    }
+    .wave-bar {
+      width: 8px;
+      background-color: #6fa8dc;
+      margin: 0 5px;
+      border-radius: 3px;
+      height: 20%;
+      transition: height 0.2s ease-in-out;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* Progress bar */
     .progressBar {
-      width: 100%;           /* take full width */
+      width: 80%;
+      max-width: 800px;
       height: 20px;
       background-color: #fff;
       border-radius: 5px;
@@ -88,24 +107,6 @@
       transition: width 0.2s;
     }
 
-    /* Wave container for fake recording animation */
-    .wave-container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      width: 100%;       /* fill entire container width */
-      height: 80px;      /* taller wave area */
-      margin: 15px 0;
-    }
-    .wave-bar {
-      width: 8px;        /* slightly wider bars */
-      background-color: #6fa8dc;
-      margin: 0 5px;
-      border-radius: 3px;
-      height: 20%;
-      transition: height 0.2s ease-in-out;
-    }
-
     #statusMessage {
       margin-top: 10px;
       font-size: 16px;
@@ -117,24 +118,29 @@
 <body>
 <div class="container">
 
-  <!-- Welcome Screen -->
-  <div id="welcomeScreen" class="screen">
+  <!-- 1) Welcome Screen: Choose mode -->
+  <div id="welcomeScreen" class="screen active">
     <h2>Choose Your Interview Mode</h2>
-    <div>
-      <button id="rapidBtn">Rapid Fire</button>
-      <button id="slowerBtn">Open-Ended</button>
-    </div>
+    <button id="rapidBtn">Rapid Fire</button>
+    <button id="slowerBtn">Open-Ended</button>
   </div>
 
-  <!-- Rapid Intro Screen -->
-  <div id="rapidIntro" class="screen hidden">
+  <!-- 2) Rapid Intro Screen -->
+  <div id="rapidIntro" class="screen">
     <h2>Rapid Mode</h2>
     <p>Press the button to begin.</p>
     <button id="startRapidInterviewBtn">Start</button>
   </div>
 
-  <!-- Question Screen (Used by both modes) -->
-  <div id="questionScreen" class="screen hidden">
+  <!-- 3) Open-Ended Intro Screen -->
+  <div id="openEndedIntro" class="screen">
+    <h2>Open-Ended Mode</h2>
+    <p>Press the button to begin.</p>
+    <button id="startOpenEndedInterviewBtn">Start</button>
+  </div>
+
+  <!-- 4) Question Screen -->
+  <div id="questionScreen" class="screen">
     <div id="questionText"></div>
 
     <div class="wave-container hidden" id="waveContainer">
@@ -150,18 +156,17 @@
     </div>
 
     <p id="statusMessage"></p>
-    <!-- Start/Stop Button for Slower Mode -->
     <button id="startStopBtn" class="hidden">Start Recording</button>
   </div>
 
-  <!-- Thank You Screen -->
-  <div id="thanksScreen" class="screen hidden">
+  <!-- 5) Thank You Screen -->
+  <div id="thanksScreen" class="screen">
     <h2>Thank you!</h2>
   </div>
 </div>
 
 <script>
-/* -------------------- QUESTIONS & RANDOMIZATION -------------------- */
+/* ========================= QUESTION BANK & RANDOMIZATION ========================= */
 const fullQuestionBank = [
   "What’s a small habit that’s had a big impact on your life?",
   "If you had to sum up your personality in three words, what would they be?",
@@ -199,7 +204,7 @@ const fullQuestionBank = [
   "If you could spend a day with anyone, living or dead, who would it be and what would you do?"
 ];
 
-// Shuffle function
+// Shuffle array
 function shuffleArray(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -207,111 +212,101 @@ function shuffleArray(arr) {
   }
   return arr;
 }
-// Shuffle, then pick subsets
+
 shuffleArray(fullQuestionBank);
+
+// Subsets
 const RAPID_QUESTIONS = fullQuestionBank.slice(0, 12);
 const SLOWER_QUESTIONS = fullQuestionBank.slice(12, 17);
 
-/* -------------------- DOM ELEMENTS -------------------- */
-const welcomeScreen = document.getElementById("welcomeScreen");
-const rapidIntro = document.getElementById("rapidIntro");
-const questionScreen = document.getElementById("questionScreen");
-const thanksScreen = document.getElementById("thanksScreen");
+/* ========================= DOM ELEMENTS ========================= */
+const welcomeScreen      = document.getElementById("welcomeScreen");
+const rapidIntro         = document.getElementById("rapidIntro");
+const openEndedIntro     = document.getElementById("openEndedIntro");
+const questionScreen     = document.getElementById("questionScreen");
+const thanksScreen       = document.getElementById("thanksScreen");
 
-const rapidBtn = document.getElementById("rapidBtn");
-const slowerBtn = document.getElementById("slowerBtn");
-const startRapidInterviewBtn = document.getElementById("startRapidInterviewBtn");
+const rapidBtn                  = document.getElementById("rapidBtn");
+const slowerBtn                 = document.getElementById("slowerBtn");
+const startRapidInterviewBtn    = document.getElementById("startRapidInterviewBtn");
+const startOpenEndedInterviewBtn= document.getElementById("startOpenEndedInterviewBtn");
 
-const questionTextEl = document.getElementById("questionText");
-const waveContainer = document.getElementById("waveContainer");
-const progressFill = document.getElementById("progressFill");
-const statusMessage = document.getElementById("statusMessage");
-const startStopBtn = document.getElementById("startStopBtn");
+const questionTextEl  = document.getElementById("questionText");
+const waveContainer   = document.getElementById("waveContainer");
+const progressFill    = document.getElementById("progressFill");
+const statusMessage   = document.getElementById("statusMessage");
+const startStopBtn    = document.getElementById("startStopBtn");
 
-/* -------------------- STATE -------------------- */
-let mode = null; // 'rapid' or 'slower'
-let questionIndex = 0;
-let questionList = [];
-let isRecording = false;
-let waveInterval = null;
+/* ========================= STATE ========================= */
+let mode           = null; // 'rapid' or 'slower'
+let questionIndex  = 0;
+let questionList   = [];
+let isRecording    = false;
+let waveInterval   = null;
 
-/* -------------------- EVENT LISTENERS -------------------- */
-rapidBtn.onclick = () => initMode("rapid");
-slowerBtn.onclick = () => initMode("slower");
-startRapidInterviewBtn.onclick = startRapidMode;
-startStopBtn.onclick = toggleSlowerRecording;
+/* ========================= EVENT LISTENERS ========================= */
+rapidBtn.onclick                = () => showScreen("rapidIntro");
+slowerBtn.onclick               = () => showScreen("openEndedIntro");
+startRapidInterviewBtn.onclick  = startRapidMode;
+startOpenEndedInterviewBtn.onclick = startOpenEndedMode;
+startStopBtn.onclick            = toggleSlowerRecording;
 
-/* -------------------- MODE SETUP -------------------- */
-function initMode(selectedMode) {
-  mode = selectedMode;
-  questionIndex = 0;
-  isRecording = false;
-
+/* ========================= SCREEN NAVIGATION ========================= */
+function showScreen(screenId) {
   // Hide all screens
-  welcomeScreen.classList.add("hidden");
-  rapidIntro.classList.add("hidden");
-  questionScreen.classList.add("hidden");
-  thanksScreen.classList.add("hidden");
+  welcomeScreen.classList.remove("active");
+  rapidIntro.classList.remove("active");
+  openEndedIntro.classList.remove("active");
+  questionScreen.classList.remove("active");
+  thanksScreen.classList.remove("active");
 
-  if (mode === "rapid") {
-    questionList = RAPID_QUESTIONS;
-    rapidIntro.classList.remove("hidden");
-  } else {
-    questionList = SLOWER_QUESTIONS;
-    if (questionList.length > 0) {
-      setupSlowerQuestion(0);
-    }
-  }
+  // Show the one we want
+  document.getElementById(screenId).classList.add("active");
 }
 
-/* -------------------- WAVE ANIMATION -------------------- */
+/* ========================= WAVE ANIMATION ========================= */
 function startWaveAnimation() {
   waveContainer.classList.remove("hidden");
   waveInterval = setInterval(() => {
-    const bars = document.querySelectorAll(".wave-bar");
+    const bars = waveContainer.querySelectorAll(".wave-bar");
     bars.forEach(bar => {
-      // random height between 20% and 100%
-      let h = Math.floor(Math.random() * 80) + 20;
+      let h = Math.floor(Math.random() * 80) + 20; // 20%..100%
       bar.style.height = h + "%";
     });
   }, 200);
 }
-
 function stopWaveAnimation() {
-  if (waveInterval) {
-    clearInterval(waveInterval);
-    waveInterval = null;
-  }
+  if (waveInterval) clearInterval(waveInterval);
+  waveInterval = null;
   waveContainer.classList.add("hidden");
-  // Reset bars to default
-  const bars = document.querySelectorAll(".wave-bar");
+  // reset bar height
+  const bars = waveContainer.querySelectorAll(".wave-bar");
   bars.forEach(bar => bar.style.height = "20%");
 }
 
-/* -------------------- RAPID MODE -------------------- */
+/* ========================= RAPID MODE ========================= */
 function startRapidMode() {
-  rapidIntro.classList.add("hidden");
-  questionScreen.classList.remove("hidden");
-
+  mode = "rapid";
+  questionList = RAPID_QUESTIONS;
   questionIndex = 0;
+  showScreen("questionScreen");
   showRapidQuestion(questionIndex);
 }
 
 function showRapidQuestion(idx) {
   if (idx >= questionList.length) {
-    showThanks();
+    showScreen("thanksScreen");
     return;
   }
-  const question = questionList[idx];
-  questionTextEl.textContent = question;
+  questionTextEl.textContent = questionList[idx];
   progressFill.style.width = "0%";
   statusMessage.textContent = "Recording...";
   isRecording = true;
 
-  startStopBtn.classList.add("hidden"); // Hide slower mode button
+  startStopBtn.classList.add("hidden"); // not used in rapid mode
   startWaveAnimation();
 
-  let totalTime = 10; // seconds per question
+  let totalTime = 10; // 10 seconds per question
   let elapsed = 0;
   let timerId = setInterval(() => {
     elapsed++;
@@ -331,9 +326,20 @@ function showRapidQuestion(idx) {
   }, 1000);
 }
 
-/* -------------------- SLOWER MODE -------------------- */
+/* ========================= OPEN-ENDED MODE ========================= */
+function startOpenEndedMode() {
+  mode = "slower";
+  questionList = SLOWER_QUESTIONS;
+  questionIndex = 0;
+  showScreen("questionScreen");
+  setupSlowerQuestion(0);
+}
+
 function setupSlowerQuestion(idx) {
-  questionScreen.classList.remove("hidden");
+  if (idx >= questionList.length) {
+    showScreen("thanksScreen");
+    return;
+  }
   questionTextEl.textContent = questionList[idx];
   progressFill.style.width = "0%";
   statusMessage.textContent = "Press 'Start Recording'.";
@@ -343,6 +349,7 @@ function setupSlowerQuestion(idx) {
   stopWaveAnimation();
 }
 
+/* Toggle recording in slower mode */
 function toggleSlowerRecording() {
   if (!isRecording) {
     // start
@@ -368,20 +375,10 @@ function toggleSlowerRecording() {
       if (elapsed >= totalTime) {
         clearInterval(cdTimer);
         questionIndex++;
-        if (questionIndex < questionList.length) {
-          setupSlowerQuestion(questionIndex);
-        } else {
-          showThanks();
-        }
+        setupSlowerQuestion(questionIndex);
       }
     }, 1000);
   }
-}
-
-/* -------------------- THANK YOU -------------------- */
-function showThanks() {
-  questionScreen.classList.add("hidden");
-  thanksScreen.classList.remove("hidden");
 }
 </script>
 </body>
