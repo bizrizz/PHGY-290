@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Randomized Interview (Fake Recording)</title>
+  <style>
+    /* Basic page styling */
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom right, #e8ebf0, #ffffff);
+      color: #333;
+      text-align: center;
+    }
+    h1, h2, p {
+      margin: 10px auto;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    button {
+      background-color: #6fa8dc;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #86c0f5;
+    }
+    .hidden {
+      display: none;
+    }
+    .progressBar {
+      width: 100%;
+      height: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      margin: 10px 0;
+      position: relative;
+      border: 1px solid #ccc;
+    }
+    .progressFill {
+      height: 100%;
+      background-color: #6aa84f;
+      width: 0%;
+      border-radius: 5px;
+      transition: width 0.2s;
+    }
+    #questionText {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    /* Wave animation container */
+    .wave-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 40px;
+      margin: 10px 0;
+    }
+    .wave-bar {
+      width: 5px;
+      background-color: #6fa8dc;
+      margin: 0 3px;
+      animation: wave 1s infinite ease-in-out;
+    }
+    .wave-bar:nth-child(1) { animation-delay: 0.0s; }
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.6s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.8s; }
+
+    @keyframes wave {
+      0% { height: 20%; }
+      50% { height: 100%; }
+      100% { height: 20%; }
+    }
+    .footerMsg {
+      font-weight: bold;
+      margin-top: 20px;
+      color: #777;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Randomized Interview</h1>
+
+  <!-- Welcome Screen -->
+  <div id="welcomeScreen">
+    <p>Choose Your Interview Mode:</p>
+    <button id="rapidBtn">Rapid Fire Mode</button>
+    <button id="slowerBtn">Open-Ended Mode</button>
+  </div>
+
+  <!-- Rapid Intro Screen -->
+  <div id="rapidIntro" class="hidden">
+    <h2>Rapid Mode</h2>
+    <p>Press the button to start the rapid-fire questions.</p>
+    <button id="startRapidInterviewBtn">Start Interview (Rapid)</button>
+  </div>
+
+  <!-- Question Screen (Used by both modes) -->
+  <div id="questionScreen" class="hidden">
+    <div id="questionText"></div>
+
+    <!-- Fake waveform (hidden when not "recording") -->
+    <div class="wave-container hidden" id="waveContainer">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+
+    <div class="progressBar">
+      <div class="progressFill" id="progressFill"></div>
+    </div>
+    <p id="statusMessage"></p>
+
+    <!-- For Slower Mode Start/Stop -->
+    <button id="startStopBtn" class="hidden">Start Recording</button>
+  </div>
+
+  <!-- Thank You Screen -->
+  <div id="thanksScreen" class="hidden">
+    <h2>Thank you for completing the survey!</h2>
+  </div>
+
+  <div class="footerMsg">
+    This demo does NOT record audio. It only simulates recording with a wave animation.
+  </div>
+</div>
+
+<script>
+/* -------------- QUESTION BANK & RANDOMIZER -------------- */
+
+const fullQuestionBank = [
+  "What’s a small habit that’s had a big impact on your life?",
+  "If you had to sum up your personality in three words, what would they be?",
+  "What’s something you do differently than most people?",
+  "What’s one thing that instantly puts you in a good mood?",
+  "If you could relive any 10 seconds of your life, what moment would you pick?",
+  "What’s one challenge that changed the way you think?",
+  "What’s the best advice you’ve ever received?",
+  "If you could tell your past self one thing, what would it be?",
+  "What’s something you learned the hard way?",
+  "What’s one decision you made that completely changed your path?",
+  "What’s the fastest decision you’ve ever had to make?",
+  "How do you approach a problem when you don’t know where to start?",
+  "What’s one time you had to think on your feet?",
+  "How do you decide when to stick with something versus move on?",
+  "If you had 30 seconds to convince someone of an idea, how would you do it?",
+  "What’s one trait that makes someone great to work with?",
+  "How do you handle a disagreement when you know you’re right?",
+  "What’s the most important lesson you’ve learned from working with others?",
+  "What’s a belief you once held strongly but have since changed your mind about?",
+  "What’s a time when you had to step up unexpectedly?",
+  "What’s an idea you think more people should be talking about?",
+  "What’s one thing that needs to be completely rethought?",
+  "If you had unlimited resources for one day, what would you do?",
+  "What’s a simple change that could make a big difference?",
+  "If you could improve one thing in the world instantly, what would it be?",
+  "What’s one thing you wish you had started doing earlier?",
+  "What’s a lesson from failure that stuck with you?",
+  "How do you measure success beyond achievements?",
+  "If you had to give yourself one rule for the future, what would it be?",
+  "What’s one way you stay motivated when things get tough?",
+  "What’s something you’ve stopped caring about as you’ve gotten older?",
+  "What’s a book, movie, or piece of art that profoundly changed your perspective?",
+  "What’s something you’ve accomplished that you once thought was impossible?",
+  "If you could spend a day with anyone, living or dead, who would it be and what would you do?"
+];
+
+// Shuffle function
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Shuffle and pick subsets
+shuffleArray(fullQuestionBank);
+const RAPID_QUESTIONS = fullQuestionBank.slice(0, 12);
+const SLOWER_QUESTIONS = fullQuestionBank.slice(12, 17);
+
+/* -------------- DOM ELEMENTS -------------- */
+const welcomeScreen = document.getElementById("welcomeScreen");
+const rapidIntro = document.getElementById("rapidIntro");
+const questionScreen = document.getElementById("questionScreen");
+const thanksScreen = document.getElementById("thanksScreen");
+
+const rapidBtn = document.getElementById("rapidBtn");
+const slowerBtn = document.getElementById("slowerBtn");
+const startRapidInterviewBtn = document.getElementById("startRapidInterviewBtn");
+
+const questionTextEl = document.getElementById("questionText");
+const waveContainer = document.getElementById("waveContainer");
+const progressFill = document.getElementById("progressFill");
+const statusMessage = document.getElementById("statusMessage");
+const startStopBtn = document.getElementById("startStopBtn");
+
+/* -------------- STATE -------------- */
+let mode = null; // 'rapid' or 'slower'
+let questionIndex = 0;
+let questionList = [];
+let isRecording = false;
+let countdownTimer = null;
+let countdownValue = 0;
+
+/* -------------- EVENT LISTENERS -------------- */
+rapidBtn.onclick = () => initiateSurvey("rapid");
+slowerBtn.onclick = () => initiateSurvey("slower");
+startRapidInterviewBtn.onclick = startRapidQuestions;
+startStopBtn.onclick = toggleSlowerRecording;
+
+/* -------------- MODE SETUP -------------- */
+function initiateSurvey(selectedMode) {
+  mode = selectedMode;
+  questionIndex = 0;
+  isRecording = false;
+
+  // Hide all screens
+  welcomeScreen.classList.add("hidden");
+  rapidIntro.classList.add("hidden");
+  questionScreen.classList.add("hidden");
+  thanksScreen.classList.add("hidden");
+
+  if (mode === "rapid") {
+    questionList = RAPID_QUESTIONS;
+    // Show rapid intro
+    rapidIntro.classList.remove("hidden");
+  } else {
+    questionList = SLOWER_QUESTIONS;
+    // Go directly to first question if we have any
+    if (questionList.length > 0) {
+      setupSlowerQuestion(0);
+    }
+  }
+}
+
+/* -------------- RAPID MODE FLOW -------------- */
+function startRapidQuestions() {
+  rapidIntro.classList.add("hidden");
+  questionScreen.classList.remove("hidden");
+
+  questionIndex = 0;
+  if (questionList.length > 0) {
+    showRapidQuestion(questionIndex);
+  }
+}
+
+function showRapidQuestion(idx) {
+  const q = questionList[idx];
+  questionTextEl.textContent = `Question ${idx + 1}: ${q}`;
+  progressFill.style.width = "0%";
+  statusMessage.textContent = "Recording for 10 seconds... (Fake)";
+  waveContainer.classList.remove("hidden"); // show wave
+
+  // Hide the slower mode button
+  startStopBtn.classList.add("hidden");
+
+  // Start "recording" simulation
+  isRecording = true;
+
+  let totalTime = 10; // 10 seconds
+  let elapsed = 0;
+  let intId = setInterval(() => {
+    elapsed++;
+    let pct = (elapsed / totalTime) * 100;
+    progressFill.style.width = pct + "%";
+
+    if (elapsed >= totalTime) {
+      clearInterval(intId);
+      finishRapidQuestion();
+    }
+  }, 1000);
+}
+
+function finishRapidQuestion() {
+  isRecording = false;
+  waveContainer.classList.add("hidden");
+  statusMessage.textContent = "Recording finished. Moving to next question...";
+
+  setTimeout(() => {
+    questionIndex++;
+    if (questionIndex < questionList.length) {
+      showRapidQuestion(questionIndex);
+    } else {
+      showThanks();
+    }
+  }, 2000);
+}
+
+/* -------------- SLOWER MODE FLOW -------------- */
+function setupSlowerQuestion(idx) {
+  questionScreen.classList.remove("hidden");
+  const q = questionList[idx];
+  questionTextEl.textContent = `Question ${idx + 1}: ${q}`;
+  progressFill.style.width = "0%";
+  statusMessage.textContent = "Press 'Start Recording' to begin (Fake).";
+  waveContainer.classList.add("hidden");
+  
+  // Show the start/stop button
+  startStopBtn.classList.remove("hidden");
+  startStopBtn.disabled = false;
+  startStopBtn.textContent = "Start Recording";
+}
+
+function toggleSlowerRecording() {
+  if (!isRecording) {
+    // Start recording
+    isRecording = true;
+    waveContainer.classList.remove("hidden");
+    statusMessage.textContent = "Recording... (Fake)";
+    startStopBtn.textContent = "Stop Recording";
+  } else {
+    // Stop recording
+    isRecording = false;
+    waveContainer.classList.add("hidden");
+    startStopBtn.disabled = true;
+    startStopBtn.textContent = "Recording Stopped";
+    statusMessage.textContent = "Waiting 30 seconds before next question...";
+
+    // Start 30-second countdown
+    doSlowerCountdown(30);
+  }
+}
+
+function doSlowerCountdown(seconds) {
+  countdownValue = seconds;
+  let elapsed = 0;
+  let intervalId = setInterval(() => {
+    elapsed++;
+    let pct = (elapsed / seconds) * 100;
+    progressFill.style.width = pct + "%";
+
+    if (elapsed >= seconds) {
+      clearInterval(intervalId);
+      goToNextSlowerQuestion();
+    }
+  }, 1000);
+}
+
+function goToNextSlowerQuestion() {
+  questionIndex++;
+  if (questionIndex < questionList.length) {
+    setupSlowerQuestion(questionIndex);
+  } else {
+    showThanks();
+  }
+}
+
+/* -------------- THANK YOU -------------- */
+function showThanks() {
+  questionScreen.classList.add("hidden");
+  thanksScreen.classList.remove("hidden");
+}
+</script>
+</body>
+</html>
