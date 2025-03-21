@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Interview</title>
+  <title>Rapid Interview with Affirmations</title>
   <style>
     /* Use 100% of the viewport for body/html */
     html, body {
@@ -24,6 +24,7 @@
       justify-content: center;
       align-items: center;
       box-sizing: border-box;
+      position: relative;
     }
 
     /* Each screen also stretches to fill the container, but is hidden by default. */
@@ -34,6 +35,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      box-sizing: border-box;
     }
     .screen.active {
       display: flex; /* show this screen */
@@ -113,33 +115,58 @@
       color: #555;
       min-height: 24px;
     }
+
+    /* Affirmation pop-up */
+    #affirmationPopup {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #6aa84f;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 999;
+    }
+
+    /* Affirmation toggle area */
+    #affirmationToggleContainer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+    }
+    #affirmationToggleContainer label {
+      margin-left: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- 1) Welcome Screen: Choose mode -->
+  <!-- Toggle Affirmations -->
+  <div id="affirmationToggleContainer">
+    <input type="checkbox" id="affirmationToggle" checked />
+    <label for="affirmationToggle">Show Affirmations</label>
+  </div>
+
+  <!-- Affirmation Popup -->
+  <div id="affirmationPopup">Great job!</div>
+
+  <!-- 1) Welcome Screen -->
   <div id="welcomeScreen" class="screen active">
-    <h2>Choose Your Interview Mode</h2>
-    <button id="rapidBtn">Rapid Fire</button>
-    <button id="slowerBtn">Open-Ended</button>
+    <h2>Rapid-Fire Opinion Interview</h2>
+    <p>Click the button below to begin.</p>
+    <button id="startRapidInterviewBtn">Start Interview</button>
   </div>
 
-  <!-- 2) Rapid Intro Screen -->
-  <div id="rapidIntro" class="screen">
-    <h2>Rapid Mode</h2>
-    <p>Press the button to begin.</p>
-    <button id="startRapidInterviewBtn">Start</button>
-  </div>
-
-  <!-- 3) Open-Ended Intro Screen -->
-  <div id="openEndedIntro" class="screen">
-    <h2>Open-Ended Mode</h2>
-    <p>Press the button to begin.</p>
-    <button id="startOpenEndedInterviewBtn">Start</button>
-  </div>
-
-  <!-- 4) Question Screen -->
+  <!-- 2) Question Screen -->
   <div id="questionScreen" class="screen">
     <div id="questionText"></div>
 
@@ -156,13 +183,13 @@
     </div>
 
     <p id="statusMessage"></p>
-    <button id="startStopBtn" class="hidden">Start Recording</button>
   </div>
 
-  <!-- 5) Thank You Screen -->
+  <!-- 3) Thank You Screen -->
   <div id="thanksScreen" class="screen">
-    <h2>Thank you!</h2>
+    <h2>Thank you for sharing your opinions!</h2>
   </div>
+
 </div>
 
 <script>
@@ -187,21 +214,7 @@ const fullQuestionBank = [
   "How do you handle a disagreement when you know you’re right?",
   "What’s the most important lesson you’ve learned from working with others?",
   "What’s a belief you once held strongly but have since changed your mind about?",
-  "What’s a time when you had to step up unexpectedly?",
-  "What’s an idea you think more people should be talking about?",
-  "What’s one thing that needs to be completely rethought?",
-  "If you had unlimited resources for one day, what would you do?",
-  "What’s a simple change that could make a big difference?",
-  "If you could improve one thing in the world instantly, what would it be?",
-  "What’s one thing you wish you had started doing earlier?",
-  "What’s a lesson from failure that stuck with you?",
-  "How do you measure success beyond achievements?",
-  "If you had to give yourself one rule for the future, what would it be?",
-  "What’s one way you stay motivated when things get tough?",
-  "What’s something you’ve stopped caring about as you’ve gotten older?",
-  "What’s a book, movie, or piece of art that profoundly changed your perspective?",
-  "What’s something you’ve accomplished that you once thought was impossible?",
-  "If you could spend a day with anyone, living or dead, who would it be and what would you do?"
+  "What’s a time when you had to step up unexpectedly?"
 ];
 
 // Shuffle array
@@ -212,58 +225,54 @@ function shuffleArray(arr) {
   }
   return arr;
 }
-
-// Shuffle the entire question bank
 shuffleArray(fullQuestionBank);
 
-// First 12 for Rapid
-const RAPID_QUESTIONS = fullQuestionBank.slice(0, 12);
-// Next 5 for Slower
-const SLOWER_QUESTIONS = fullQuestionBank.slice(12, 17);
+// We'll limit to the first 10 for rapid mode
+const RAPID_QUESTIONS = fullQuestionBank.slice(0, 10);
 
 /* ========================= DOM ELEMENTS ========================= */
-const welcomeScreen           = document.getElementById("welcomeScreen");
-const rapidIntro              = document.getElementById("rapidIntro");
-const openEndedIntro          = document.getElementById("openEndedIntro");
-const questionScreen          = document.getElementById("questionScreen");
-const thanksScreen            = document.getElementById("thanksScreen");
+const welcomeScreen    = document.getElementById("welcomeScreen");
+const questionScreen   = document.getElementById("questionScreen");
+const thanksScreen     = document.getElementById("thanksScreen");
 
-const rapidBtn                = document.getElementById("rapidBtn");
-const slowerBtn               = document.getElementById("slowerBtn");
-const startRapidInterviewBtn  = document.getElementById("startRapidInterviewBtn");
-const startOpenEndedInterviewBtn = document.getElementById("startOpenEndedInterviewBtn");
+const startRapidInterviewBtn = document.getElementById("startRapidInterviewBtn");
 
-const questionTextEl  = document.getElementById("questionText");
-const waveContainer   = document.getElementById("waveContainer");
-const progressFill    = document.getElementById("progressFill");
-const statusMessage   = document.getElementById("statusMessage");
-const startStopBtn    = document.getElementById("startStopBtn");
+const questionTextEl   = document.getElementById("questionText");
+const waveContainer    = document.getElementById("waveContainer");
+const progressFill     = document.getElementById("progressFill");
+const statusMessage    = document.getElementById("statusMessage");
+
+const affirmationToggle= document.getElementById("affirmationToggle");
+const affirmationPopup = document.getElementById("affirmationPopup");
 
 /* ========================= STATE ========================= */
-let mode           = null; // 'rapid' or 'slower'
-let questionIndex  = 0;
-let questionList   = [];
-let isRecording    = false;
-let waveInterval   = null;
+let questionIndex   = 0;
+let isRecording     = false;
+let waveInterval    = null;
+let showAffirmation = affirmationToggle.checked; // track user’s preference
 
-/* ========================= EVENT LISTENERS ========================= */
-rapidBtn.onclick                = () => showScreen("rapidIntro");
-slowerBtn.onclick               = () => showScreen("openEndedIntro");
-startRapidInterviewBtn.onclick  = startRapidMode;
-startOpenEndedInterviewBtn.onclick = startOpenEndedMode;
-startStopBtn.onclick            = toggleSlowerRecording;
+/* ========================= AFFIRMATIONS ========================= */
+const affirmationsList = [
+  "Great job!",
+  "Well done!",
+  "Keep it up!",
+  "Nice answer!",
+  "You’re doing amazing!",
+  "Fantastic response!"
+];
 
-/* ========================= SCREEN NAVIGATION ========================= */
-function showScreen(screenId) {
-  // Hide all screens
-  welcomeScreen.classList.remove("active");
-  rapidIntro.classList.remove("active");
-  openEndedIntro.classList.remove("active");
-  questionScreen.classList.remove("active");
-  thanksScreen.classList.remove("active");
+function displayAffirmation() {
+  if (!showAffirmation) return;
+  // Pick a random affirmation
+  let text = affirmationsList[Math.floor(Math.random() * affirmationsList.length)];
+  affirmationPopup.textContent = text;
+  // Show pop-up
+  affirmationPopup.style.display = "block";
 
-  // Show the one we want
-  document.getElementById(screenId).classList.add("active");
+  // Hide after 2 seconds
+  setTimeout(() => {
+    affirmationPopup.style.display = "none";
+  }, 2000);
 }
 
 /* ========================= WAVE ANIMATION ========================= */
@@ -286,27 +295,22 @@ function stopWaveAnimation() {
   bars.forEach(bar => bar.style.height = "20%");
 }
 
-/* ========================= RAPID MODE ========================= */
+/* ========================= RAPID MODE LOGIC ========================= */
 function startRapidMode() {
-  mode = "rapid";
-  questionList = RAPID_QUESTIONS;
   questionIndex = 0;
   showScreen("questionScreen");
   showRapidQuestion(questionIndex);
 }
 
 function showRapidQuestion(idx) {
-  if (idx >= questionList.length) {
+  if (idx >= RAPID_QUESTIONS.length) {
     showScreen("thanksScreen");
     return;
   }
-  questionTextEl.textContent = questionList[idx];
+  questionTextEl.textContent = RAPID_QUESTIONS[idx];
   progressFill.style.width = "0%";
   statusMessage.textContent = "Recording...";
   isRecording = true;
-
-  // not used in rapid mode
-  startStopBtn.classList.add("hidden");
 
   startWaveAnimation();
 
@@ -321,7 +325,11 @@ function showRapidQuestion(idx) {
       clearInterval(timerId);
       isRecording = false;
       stopWaveAnimation();
-      statusMessage.textContent = "Next question...";
+      statusMessage.textContent = "Moving to the next question...";
+
+      // Show an affirmation pop-up if toggled on
+      displayAffirmation();
+
       setTimeout(() => {
         questionIndex++;
         showRapidQuestion(questionIndex);
@@ -330,59 +338,21 @@ function showRapidQuestion(idx) {
   }, 1000);
 }
 
-/* ========================= OPEN-ENDED MODE ========================= */
-function startOpenEndedMode() {
-  mode = "slower";
-  questionList = SLOWER_QUESTIONS;
-  questionIndex = 0;
-  showScreen("questionScreen");
-  setupSlowerQuestion(0);
-}
+/* ========================= EVENT LISTENERS ========================= */
+startRapidInterviewBtn.onclick = startRapidMode;
 
-function setupSlowerQuestion(idx) {
-  if (idx >= questionList.length) {
-    showScreen("thanksScreen");
-    return;
-  }
-  questionTextEl.textContent = questionList[idx];
-  progressFill.style.width = "0%";
-  statusMessage.textContent = "Press 'Start Recording'.";
-  startStopBtn.classList.remove("hidden");
-  startStopBtn.disabled = false;
-  startStopBtn.textContent = "Start Recording";
-  stopWaveAnimation();
-}
+// Toggle Affirmations on/off
+affirmationToggle.addEventListener("change", () => {
+  showAffirmation = affirmationToggle.checked;
+});
 
-/* Toggle recording in slower mode */
-function toggleSlowerRecording() {
-  if (!isRecording) {
-    // start
-    isRecording = true;
-    startStopBtn.textContent = "Stop Recording";
-    statusMessage.textContent = "Recording...";
-    startWaveAnimation();
-  } else {
-    // stop
-    isRecording = false;
-    stopWaveAnimation();
-    startStopBtn.disabled = true;
-    startStopBtn.textContent = "Recording Stopped";
-    statusMessage.textContent = "Wait 10 seconds...";
+/* ========================= SCREEN NAVIGATION ========================= */
+function showScreen(screenId) {
+  welcomeScreen.classList.remove("active");
+  questionScreen.classList.remove("active");
+  thanksScreen.classList.remove("active");
 
-    let totalTime = 10;  // changed from 30 to 10 for quicker testing
-    let elapsed = 0;
-    let cdTimer = setInterval(() => {
-      elapsed++;
-      let pct = (elapsed / totalTime) * 100;
-      progressFill.style.width = pct + "%";
-
-      if (elapsed >= totalTime) {
-        clearInterval(cdTimer);
-        questionIndex++;
-        setupSlowerQuestion(questionIndex);
-      }
-    }, 1000);
-  }
+  document.getElementById(screenId).classList.add("active");
 }
 </script>
 </body>
