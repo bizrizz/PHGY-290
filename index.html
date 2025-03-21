@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Rapid Interview with Affirmations</title>
+  <title>Rapid Interview with Optional Affirmations</title>
   <style>
     /* Use 100% of the viewport for body/html */
     html, body {
@@ -23,8 +23,8 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      position: relative; /* for absolute-positioned elements */
       box-sizing: border-box;
-      position: relative;
     }
 
     /* Each screen also stretches to fill the container, but is hidden by default. */
@@ -157,7 +157,7 @@
   </div>
 
   <!-- Affirmation Popup -->
-  <div id="affirmationPopup">Great job!</div>
+  <div id="affirmationPopup">Awesome answer!</div>
 
   <!-- 1) Welcome Screen -->
   <div id="welcomeScreen" class="screen active">
@@ -203,18 +203,18 @@ const fullQuestionBank = [
   "What’s one challenge that changed the way you think?",
   "What’s the best advice you’ve ever received?",
   "If you could tell your past self one thing, what would it be?",
-  "What’s something you learned the hard way?",
-  "What’s one decision you made that completely changed your path?",
-  "What’s the fastest decision you’ve ever had to make?",
+  "What’s a lesson from failure that stuck with you?",
   "How do you approach a problem when you don’t know where to start?",
+  "What’s the fastest decision you’ve ever had to make?",
   "What’s one time you had to think on your feet?",
   "How do you decide when to stick with something versus move on?",
+  "What’s a belief you once held strongly but have since changed your mind about?",
   "If you had 30 seconds to convince someone of an idea, how would you do it?",
   "What’s one trait that makes someone great to work with?",
-  "How do you handle a disagreement when you know you’re right?",
   "What’s the most important lesson you’ve learned from working with others?",
-  "What’s a belief you once held strongly but have since changed your mind about?",
-  "What’s a time when you had to step up unexpectedly?"
+  "What’s a time when you had to step up unexpectedly?",
+  "What’s one thing that instantly lifts your mood?",
+  "If you had unlimited resources for one day, what would you do?"
 ];
 
 // Shuffle array
@@ -251,16 +251,18 @@ let isRecording     = false;
 let waveInterval    = null;
 let showAffirmation = affirmationToggle.checked; // track user’s preference
 
-/* ========================= AFFIRMATIONS ========================= */
+/* ========================= AFFIRMATIONS (5–7 EXAMPLES) ========================= */
 const affirmationsList = [
+  "Awesome answer!",
   "Great job!",
-  "Well done!",
   "Keep it up!",
-  "Nice answer!",
-  "You’re doing amazing!",
-  "Fantastic response!"
+  "You're doing fantastic!",
+  "Nice response!",
+  "Excellent insight!",
+  "Fantastic effort!"
 ];
 
+/* Show a quick affirmation if enabled */
 function displayAffirmation() {
   if (!showAffirmation) return;
   // Pick a random affirmation
@@ -325,7 +327,7 @@ function showRapidQuestion(idx) {
       clearInterval(timerId);
       isRecording = false;
       stopWaveAnimation();
-      statusMessage.textContent = "Moving to the next question...";
+      statusMessage.textContent = "Next question...";
 
       // Show an affirmation pop-up if toggled on
       displayAffirmation();
@@ -351,7 +353,6 @@ function showScreen(screenId) {
   welcomeScreen.classList.remove("active");
   questionScreen.classList.remove("active");
   thanksScreen.classList.remove("active");
-
   document.getElementById(screenId).classList.add("active");
 }
 </script>
