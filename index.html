@@ -85,21 +85,16 @@
       color: #555;
       min-height: 24px;
     }
-    /* Centered, larger affirmation popup */
+    /* Affirmation popup: plain text, green, small font, left aligned, no box */
     #affirmationPopup {
       position: fixed;
       top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #808080;
-      color: #fff;
-      padding: 20px 30px;
-      border-radius: 10px;
-      font-size: 24px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      left: 10%;
+      transform: translateY(-50%);
+      color: green;
+      font-size: 1.5em;
       display: none;
-      z-index: 999;
-      text-align: center;
+      text-align: left;
     }
     /* Ellipsis bounce animation */
     @keyframes bounce {
@@ -113,7 +108,7 @@
 </head>
 <body>
 <div class="container">
-  <!-- Affirmation Popup -->
+  <!-- Affirmation Text (plain, no box) -->
   <div id="affirmationPopup"></div>
 
   <!-- 1) Welcome Screen -->
@@ -171,22 +166,22 @@ let waveInterval  = null;
 /* ========================= AFFIRMATION ========================= */
 const affirmationMessage = "That's a very unique answer, you must be very disciplined to do that";
 
-/* Show a quick affirmation:
-   - First, display a bouncing ellipsis for 2 seconds.
+/* Show affirmation:
+   - First, display a bouncing ellipsis (aligned left) for 2 seconds.
    - Then show the final message for 5 seconds.
    - Only after that, invoke the callback to reveal the "Next Question" button.
 */
 function displayAffirmation(callback) {
-  // Hide the question text to ensure the affirmation is clearly visible.
+  // Hide the question text for clarity.
   questionTextEl.style.display = "none";
   
-  // Show bouncing ellipsis
+  // Show bouncing ellipsis (aligned left)
   affirmationPopup.textContent = "...";
   affirmationPopup.classList.add("ellipsis");
   affirmationPopup.style.display = "block";
   
-  // After 2 seconds, show the final affirmation message.
   setTimeout(() => {
+    // Change to the final affirmation message and remove the bounce animation.
     affirmationPopup.textContent = affirmationMessage;
     affirmationPopup.classList.remove("ellipsis");
     
