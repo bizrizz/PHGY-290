@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Rapid Interview with Affirmations</title>
   <style>
-    /* Use 100% of the viewport for body/html */
+    /* Basic reset and styling */
     html, body {
       margin: 0;
       padding: 0;
@@ -85,18 +85,19 @@
       color: #555;
       min-height: 24px;
     }
-    /* Affirmation popup: plain text, green, small font, left aligned, no box */
+    /* Centered affirmation area (no box, plain green text, bold) */
     #affirmationPopup {
       position: fixed;
       top: 50%;
-      left: 10%;
-      transform: translateY(-50%);
+      left: 50%;
+      transform: translate(-50%, -50%);
       color: green;
-      font-size: 1.5em;
+      font-size: 1.8em;
+      font-weight: bold;
       display: none;
-      text-align: left;
+      text-align: center;
     }
-    /* Ellipsis bounce animation */
+    /* Bounce animation for ellipsis */
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-10px); }
@@ -108,7 +109,7 @@
 </head>
 <body>
 <div class="container">
-  <!-- Affirmation Text (plain, no box) -->
+  <!-- Affirmation area (centered) -->
   <div id="affirmationPopup"></div>
 
   <!-- 1) Welcome Screen -->
@@ -166,33 +167,64 @@ let waveInterval  = null;
 /* ========================= AFFIRMATION ========================= */
 const affirmationMessage = "That's a very unique answer, you must be very disciplined to do that";
 
-/* Show affirmation:
-   - First, display a bouncing ellipsis (aligned left) for 2 seconds.
-   - Then show the final message for 5 seconds.
-   - Only after that, invoke the callback to reveal the "Next Question" button.
+/* Animate "Analyzing" with counting ellipsis for a given duration (ms) */
+function animateAnalyzing(duration, callback) {
+  const baseText = "Analyzing";
+  let dots = 0;
+  const maxDots = 3;
+  const interval = 500; // update every 500ms
+  const startTime = Date.now();
+  
+  const animInterval = setInterval(() => {
+    dots = (dots + 1) % (maxDots + 1);
+    affirmationPopup.textContent = baseText + ".".repeat(dots);
+    if (Date.now() - startTime >= duration) {
+      clearInterval(animInterval);
+      callback();
+    }
+  }, interval);
+}
+
+/* Typewriter animation for feedback text */
+function typeWriter(text, callback) {
+  let i = 0;
+  const speed = 50; // ms per letter
+  affirmationPopup.textContent = ""; // clear text
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      affirmationPopup.textContent += text.charAt(i);
+      i++;
+    } else {
+      clearInterval(interval);
+      callback();
+    }
+  }, speed);
+}
+
+/* Display affirmation sequence:
+   1. Hide question text and button.
+   2. Show "Analyzing" with animated ellipsis for 2 seconds.
+   3. Then type out the feedback message (with typewriter animation).
+   4. Keep the feedback on screen for 10 seconds.
+   5. Finally, call the callback to reveal the Next Question button.
 */
 function displayAffirmation(callback) {
-  // Hide the question text for clarity.
+  // Hide question text and action button for clarity.
   questionTextEl.style.display = "none";
+  actionButton.style.display = "none";
   
-  // Show bouncing ellipsis (aligned left)
-  affirmationPopup.textContent = "...";
-  affirmationPopup.classList.add("ellipsis");
   affirmationPopup.style.display = "block";
   
-  setTimeout(() => {
-    // Change to the final affirmation message and remove the bounce animation.
-    affirmationPopup.textContent = affirmationMessage;
-    affirmationPopup.classList.remove("ellipsis");
-    
-    // Keep the final message displayed for 5 seconds.
-    setTimeout(() => {
-      affirmationPopup.style.display = "none";
-      // Restore question text visibility.
-      questionTextEl.style.display = "block";
-      if (callback) callback();
-    }, 5000);
-  }, 2000);
+  // Step 1: Animate "Analyzing" for 2 seconds.
+  animateAnalyzing(2000, function() {
+    // Step 2: Typewriter the feedback (final affirmation) letter by letter.
+    typeWriter(affirmationMessage, function() {
+      // Step 3: Keep the final feedback on screen for 10 seconds.
+      setTimeout(function() {
+        callback();
+      }, 10000);
+    });
+  });
 }
 
 /* ========================= WAVE ANIMATION ========================= */
@@ -231,6 +263,10 @@ function showRapidQuestion(idx) {
   statusMessage.textContent = "Answer the question and click 'I'm Done' when finished.";
   actionButton.textContent = "I'm Done";
   isAwaitingNext = false;
+  // Reset displays
+  questionTextEl.style.display = "block";
+  actionButton.style.display = "block";
+  affirmationPopup.style.display = "none";
   startWaveAnimation();
 }
 
@@ -239,12 +275,15 @@ startRapidInterviewBtn.onclick = startRapidMode;
 
 actionButton.onclick = function() {
   if (!isAwaitingNext) {
-    // User indicates they are done with the question.
+    // User indicates they're done with the question.
     stopWaveAnimation();
     statusMessage.textContent = "Processing your answer...";
+    // Hide the button while the feedback animation runs.
+    actionButton.style.display = "none";
     displayAffirmation(function() {
-      // After the affirmation (5 seconds of final message), reveal the Next Question button.
+      // After the feedback has been on-screen for 10 seconds, show the Next Question button.
       actionButton.textContent = "Next Question";
+      actionButton.style.display = "block";
       statusMessage.textContent = "Click 'Next Question' to continue.";
       isAwaitingNext = true;
     });
