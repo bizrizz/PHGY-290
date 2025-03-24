@@ -85,11 +85,12 @@
       color: #555;
       min-height: 24px;
     }
-    /* Affirmation pop-up with a gray background */
+    /* Centered affirmation popup */
     #affirmationPopup {
-      position: absolute;
-      top: 20px;
-      right: 20px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background-color: #808080;
       color: #fff;
       padding: 12px 16px;
@@ -98,6 +99,14 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       display: none;
       z-index: 999;
+    }
+    /* Ellipsis bounce animation */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .ellipsis {
+      animation: bounce 1s infinite;
     }
   </style>
 </head>
@@ -163,12 +172,22 @@ const affirmationMessage = "That's a very unique answer, you must be very discip
 
 /* Show a quick affirmation with a 2-second ellipsis animation, then call the callback */
 function displayAffirmation(callback) {
+  // Hide the question text so the affirmation stands out
+  questionTextEl.style.display = "none";
+  
+  // Show loading ellipsis with bounce animation for 2 seconds
   affirmationPopup.textContent = "...";
+  affirmationPopup.classList.add("ellipsis");
   affirmationPopup.style.display = "block";
+  
   setTimeout(() => {
+    // Change to the final affirmation message and remove bounce animation
     affirmationPopup.textContent = affirmationMessage;
+    affirmationPopup.classList.remove("ellipsis");
     setTimeout(() => {
       affirmationPopup.style.display = "none";
+      // Restore the question text
+      questionTextEl.style.display = "block";
       if (callback) callback();
     }, 2000);
   }, 2000);
