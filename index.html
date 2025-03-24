@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Rapid Interview with Optional Affirmations</title>
+  <title>Rapid Interview with Affirmations</title>
   <style>
     /* Use 100% of the viewport for body/html */
     html, body {
@@ -14,8 +14,6 @@
       color: #333;
       text-align: center;
     }
-
-    /* .container fills the entire window and centers content */
     .container {
       width: 100%;
       height: 100%;
@@ -23,29 +21,25 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      position: relative; /* for absolute-positioned elements */
+      position: relative;
       box-sizing: border-box;
     }
-
-    /* Each screen also stretches to fill the container, but is hidden by default. */
     .screen {
       width: 100%;
       height: 100%;
-      display: none; /* hidden by default */
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       box-sizing: border-box;
     }
     .screen.active {
-      display: flex; /* show this screen */
+      display: flex;
     }
-
     h1, h2, p {
       margin: 10px auto;
       padding: 0;
     }
-
     button {
       background-color: #6fa8dc;
       color: white;
@@ -59,16 +53,12 @@
     button:hover {
       background-color: #86c0f5;
     }
-
-    /* Large question text */
     #questionText {
       font-size: 2.5em;
       font-weight: 600;
       line-height: 1.3em;
       margin-bottom: 30px;
     }
-
-    /* Wave container & bars (fake recording animation) */
     .wave-container {
       display: flex;
       justify-content: center;
@@ -89,8 +79,6 @@
     .hidden {
       display: none !important;
     }
-
-    /* Progress bar */
     .progressBar {
       width: 80%;
       max-width: 800px;
@@ -108,20 +96,18 @@
       border-radius: 5px;
       transition: width 0.2s;
     }
-
     #statusMessage {
       margin-top: 10px;
       font-size: 16px;
       color: #555;
       min-height: 24px;
     }
-
-    /* Affirmation pop-up */
+    /* Affirmation pop-up with a gray background */
     #affirmationPopup {
       position: absolute;
       top: 20px;
       right: 20px;
-      background-color: #6aa84f;
+      background-color: #808080;
       color: #fff;
       padding: 12px 16px;
       border-radius: 6px;
@@ -130,32 +116,10 @@
       display: none;
       z-index: 999;
     }
-
-    /* Affirmation toggle area */
-    #affirmationToggleContainer {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      display: flex;
-      align-items: center;
-      font-size: 16px;
-    }
-    #affirmationToggleContainer label {
-      margin-left: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
 <div class="container">
-
-  <!-- Toggle Affirmations -->
-  <div id="affirmationToggleContainer">
-    <input type="checkbox" id="affirmationToggle" checked />
-    <label for="affirmationToggle">Show Affirmations</label>
-  </div>
-
   <!-- Affirmation Popup -->
   <div id="affirmationPopup"></div>
 
@@ -169,7 +133,6 @@
   <!-- 2) Question Screen -->
   <div id="questionScreen" class="screen">
     <div id="questionText"></div>
-
     <div class="wave-container hidden" id="waveContainer">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -177,11 +140,9 @@
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
     </div>
-
     <div class="progressBar">
       <div class="progressFill" id="progressFill"></div>
     </div>
-
     <p id="statusMessage"></p>
   </div>
 
@@ -189,14 +150,13 @@
   <div id="thanksScreen" class="screen">
     <h2>Thank you for sharing your opinions!</h2>
   </div>
-
 </div>
 
 <script>
 /* ========================= QUESTION BANK & RAPID QUESTIONS ========================= */
-// Define exactly 2 questions for rapid mode
 const RAPID_QUESTIONS = [
-  "What’s something you do differently than most people?"
+  "What’s something you do differently than most people?",
+  "What’s a small habit that’s had a big impact on your life?"
 ];
 
 /* ========================= DOM ELEMENTS ========================= */
@@ -211,34 +171,29 @@ const waveContainer    = document.getElementById("waveContainer");
 const progressFill     = document.getElementById("progressFill");
 const statusMessage    = document.getElementById("statusMessage");
 
-const affirmationToggle= document.getElementById("affirmationToggle");
 const affirmationPopup = document.getElementById("affirmationPopup");
 
 /* ========================= STATE ========================= */
-let questionIndex   = 0;
-let isRecording     = false;
-let waveInterval    = null;
-let showAffirmation = affirmationToggle.checked; // track user’s preference
+let questionIndex = 0;
+let isRecording   = false;
+let waveInterval  = null;
 
 /* ========================= AFFIRMATION ========================= */
-// Use a static, depersonalized affirmation message
-const affirmationMessage = "What’s something you do differently than most people? (that's a very unique answer, you must be very disciplined to do that)";
+const affirmationMessage = "That's a very unique answer, you must be very disciplined to do that";
 
-/* Show a quick affirmation if enabled, with a loading ellipsis effect */
+/* Show a quick affirmation with a 2-second ellipsis animation */
 function displayAffirmation() {
-  if (!showAffirmation) return;
-  // Show loading ellipsis first
+  // Show loading ellipsis for 2 seconds
   affirmationPopup.textContent = "...";
   affirmationPopup.style.display = "block";
 
-  // After a short delay, show the affirmation message
   setTimeout(() => {
     affirmationPopup.textContent = affirmationMessage;
     // Hide after 2 seconds
     setTimeout(() => {
       affirmationPopup.style.display = "none";
     }, 2000);
-  }, 500);
+  }, 2000);
 }
 
 /* ========================= WAVE ANIMATION ========================= */
@@ -247,7 +202,7 @@ function startWaveAnimation() {
   waveInterval = setInterval(() => {
     const bars = waveContainer.querySelectorAll(".wave-bar");
     bars.forEach(bar => {
-      let h = Math.floor(Math.random() * 80) + 20; // 20%..100%
+      let h = Math.floor(Math.random() * 80) + 20;
       bar.style.height = h + "%";
     });
   }, 200);
@@ -256,7 +211,6 @@ function stopWaveAnimation() {
   if (waveInterval) clearInterval(waveInterval);
   waveInterval = null;
   waveContainer.classList.add("hidden");
-  // reset bar height
   const bars = waveContainer.querySelectorAll(".wave-bar");
   bars.forEach(bar => bar.style.height = "20%");
 }
@@ -293,7 +247,7 @@ function showRapidQuestion(idx) {
       stopWaveAnimation();
       statusMessage.textContent = "Next question...";
 
-      // Show the affirmation pop-up if toggled on
+      // Always show the affirmation popup
       displayAffirmation();
 
       setTimeout(() => {
@@ -306,11 +260,6 @@ function showRapidQuestion(idx) {
 
 /* ========================= EVENT LISTENERS ========================= */
 startRapidInterviewBtn.onclick = startRapidMode;
-
-// Toggle Affirmations on/off
-affirmationToggle.addEventListener("change", () => {
-  showAffirmation = affirmationToggle.checked;
-});
 
 /* ========================= SCREEN NAVIGATION ========================= */
 function showScreen(screenId) {
