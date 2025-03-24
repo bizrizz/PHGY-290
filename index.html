@@ -79,23 +79,6 @@
     .hidden {
       display: none !important;
     }
-    .progressBar {
-      width: 80%;
-      max-width: 800px;
-      height: 20px;
-      background-color: #fff;
-      border-radius: 5px;
-      margin: 20px 0 10px;
-      position: relative;
-      border: 1px solid #ccc;
-    }
-    .progressFill {
-      height: 100%;
-      background-color: #6aa84f;
-      width: 0%;
-      border-radius: 5px;
-      transition: width 0.2s;
-    }
     #statusMessage {
       margin-top: 10px;
       font-size: 16px;
@@ -140,10 +123,8 @@
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
     </div>
-    <div class="progressBar">
-      <div class="progressFill" id="progressFill"></div>
-    </div>
     <p id="statusMessage"></p>
+    <button id="actionButton">I'm Done</button>
   </div>
 
   <!-- 3) Thank You Screen -->
@@ -165,33 +146,30 @@ const questionScreen   = document.getElementById("questionScreen");
 const thanksScreen     = document.getElementById("thanksScreen");
 
 const startRapidInterviewBtn = document.getElementById("startRapidInterviewBtn");
+const actionButton = document.getElementById("actionButton");
 
 const questionTextEl   = document.getElementById("questionText");
 const waveContainer    = document.getElementById("waveContainer");
-const progressFill     = document.getElementById("progressFill");
 const statusMessage    = document.getElementById("statusMessage");
-
 const affirmationPopup = document.getElementById("affirmationPopup");
 
 /* ========================= STATE ========================= */
 let questionIndex = 0;
-let isRecording   = false;
+let isAwaitingNext = false;
 let waveInterval  = null;
 
 /* ========================= AFFIRMATION ========================= */
 const affirmationMessage = "That's a very unique answer, you must be very disciplined to do that";
 
-/* Show a quick affirmation with a 2-second ellipsis animation */
-function displayAffirmation() {
-  // Show loading ellipsis for 2 seconds
+/* Show a quick affirmation with a 2-second ellipsis animation, then call the callback */
+function displayAffirmation(callback) {
   affirmationPopup.textContent = "...";
   affirmationPopup.style.display = "block";
-
   setTimeout(() => {
     affirmationPopup.textContent = affirmationMessage;
-    // Hide after 2 seconds
     setTimeout(() => {
       affirmationPopup.style.display = "none";
+      if (callback) callback();
     }, 2000);
   }, 2000);
 }
@@ -227,39 +205,33 @@ function showRapidQuestion(idx) {
     showScreen("thanksScreen");
     return;
   }
+  // Prepare the question screen for a new question.
   questionTextEl.textContent = RAPID_QUESTIONS[idx];
-  progressFill.style.width = "0%";
-  statusMessage.textContent = "Recording...";
-  isRecording = true;
-
+  statusMessage.textContent = "Answer the question and click 'I'm Done' when finished.";
+  actionButton.textContent = "I'm Done";
+  isAwaitingNext = false;
   startWaveAnimation();
-
-  let totalTime = 10; // 10 seconds per question
-  let elapsed = 0;
-  let timerId = setInterval(() => {
-    elapsed++;
-    let pct = (elapsed / totalTime) * 100;
-    progressFill.style.width = pct + "%";
-
-    if (elapsed >= totalTime) {
-      clearInterval(timerId);
-      isRecording = false;
-      stopWaveAnimation();
-      statusMessage.textContent = "Next question...";
-
-      // Always show the affirmation popup
-      displayAffirmation();
-
-      setTimeout(() => {
-        questionIndex++;
-        showRapidQuestion(questionIndex);
-      }, 1500);
-    }
-  }, 1000);
 }
 
 /* ========================= EVENT LISTENERS ========================= */
 startRapidInterviewBtn.onclick = startRapidMode;
+
+actionButton.onclick = function() {
+  if (!isAwaitingNext) {
+    // User indicates they are done with the question.
+    stopWaveAnimation();
+    statusMessage.textContent = "Processing your answer...";
+    displayAffirmation(function() {
+      actionButton.textContent = "Next Question";
+      statusMessage.textContent = "Click 'Next Question' to continue.";
+      isAwaitingNext = true;
+    });
+  } else {
+    // Proceed to the next question.
+    questionIndex++;
+    showRapidQuestion(questionIndex);
+  }
+};
 
 /* ========================= SCREEN NAVIGATION ========================= */
 function showScreen(screenId) {
