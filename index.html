@@ -157,7 +157,7 @@
   </div>
 
   <!-- Affirmation Popup -->
-  <div id="affirmationPopup">Awesome answer!</div>
+  <div id="affirmationPopup"></div>
 
   <!-- 1) Welcome Screen -->
   <div id="welcomeScreen" class="screen active">
@@ -193,42 +193,11 @@
 </div>
 
 <script>
-/* ========================= QUESTION BANK & RANDOMIZATION ========================= */
-const fullQuestionBank = [
-  "What’s a small habit that’s had a big impact on your life?",
-  "If you had to sum up your personality in three words, what would they be?",
-  "What’s something you do differently than most people?",
-  "What’s one thing that instantly puts you in a good mood?",
-  "If you could relive any 10 seconds of your life, what moment would you pick?",
-  "What’s one challenge that changed the way you think?",
-  "What’s the best advice you’ve ever received?",
-  "If you could tell your past self one thing, what would it be?",
-  "What’s a lesson from failure that stuck with you?",
-  "How do you approach a problem when you don’t know where to start?",
-  "What’s the fastest decision you’ve ever had to make?",
-  "What’s one time you had to think on your feet?",
-  "How do you decide when to stick with something versus move on?",
-  "What’s a belief you once held strongly but have since changed your mind about?",
-  "If you had 30 seconds to convince someone of an idea, how would you do it?",
-  "What’s one trait that makes someone great to work with?",
-  "What’s the most important lesson you’ve learned from working with others?",
-  "What’s a time when you had to step up unexpectedly?",
-  "What’s one thing that instantly lifts your mood?",
-  "If you had unlimited resources for one day, what would you do?"
+/* ========================= QUESTION BANK & RAPID QUESTIONS ========================= */
+// Define exactly 2 questions for rapid mode
+const RAPID_QUESTIONS = [
+  "What’s something you do differently than most people?"
 ];
-
-// Shuffle array
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-shuffleArray(fullQuestionBank);
-
-// We'll limit to the first 10 for rapid mode
-const RAPID_QUESTIONS = fullQuestionBank.slice(0, 10);
 
 /* ========================= DOM ELEMENTS ========================= */
 const welcomeScreen    = document.getElementById("welcomeScreen");
@@ -251,30 +220,25 @@ let isRecording     = false;
 let waveInterval    = null;
 let showAffirmation = affirmationToggle.checked; // track user’s preference
 
-/* ========================= AFFIRMATIONS (5–7 EXAMPLES) ========================= */
-const affirmationsList = [
-  "Awesome answer!",
-  "Great job!",
-  "Keep it up!",
-  "You're doing fantastic!",
-  "Nice response!",
-  "Excellent insight!",
-  "Fantastic effort!"
-];
+/* ========================= AFFIRMATION ========================= */
+// Use a static, depersonalized affirmation message
+const affirmationMessage = "What’s something you do differently than most people? (that's a very unique answer, you must be very disciplined to do that)";
 
-/* Show a quick affirmation if enabled */
+/* Show a quick affirmation if enabled, with a loading ellipsis effect */
 function displayAffirmation() {
   if (!showAffirmation) return;
-  // Pick a random affirmation
-  let text = affirmationsList[Math.floor(Math.random() * affirmationsList.length)];
-  affirmationPopup.textContent = text;
-  // Show pop-up
+  // Show loading ellipsis first
+  affirmationPopup.textContent = "...";
   affirmationPopup.style.display = "block";
 
-  // Hide after 2 seconds
+  // After a short delay, show the affirmation message
   setTimeout(() => {
-    affirmationPopup.style.display = "none";
-  }, 2000);
+    affirmationPopup.textContent = affirmationMessage;
+    // Hide after 2 seconds
+    setTimeout(() => {
+      affirmationPopup.style.display = "none";
+    }, 2000);
+  }, 500);
 }
 
 /* ========================= WAVE ANIMATION ========================= */
@@ -329,7 +293,7 @@ function showRapidQuestion(idx) {
       stopWaveAnimation();
       statusMessage.textContent = "Next question...";
 
-      // Show an affirmation pop-up if toggled on
+      // Show the affirmation pop-up if toggled on
       displayAffirmation();
 
       setTimeout(() => {
