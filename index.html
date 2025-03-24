@@ -43,12 +43,12 @@
     button {
       background-color: #6fa8dc;
       color: white;
-      font-size: 16px;
+      font-size: 18px;
       border-radius: 5px;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
       cursor: pointer;
-      margin: 5px;
+      margin: 10px;
     }
     button:hover {
       background-color: #86c0f5;
@@ -85,7 +85,7 @@
       color: #555;
       min-height: 24px;
     }
-    /* Centered affirmation popup */
+    /* Centered, larger affirmation popup */
     #affirmationPopup {
       position: fixed;
       top: 50%;
@@ -93,12 +93,13 @@
       transform: translate(-50%, -50%);
       background-color: #808080;
       color: #fff;
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-size: 16px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      padding: 20px 30px;
+      border-radius: 10px;
+      font-size: 24px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       display: none;
       z-index: 999;
+      text-align: center;
     }
     /* Ellipsis bounce animation */
     @keyframes bounce {
@@ -170,26 +171,32 @@ let waveInterval  = null;
 /* ========================= AFFIRMATION ========================= */
 const affirmationMessage = "That's a very unique answer, you must be very disciplined to do that";
 
-/* Show a quick affirmation with a 2-second ellipsis animation, then call the callback */
+/* Show a quick affirmation:
+   - First, display a bouncing ellipsis for 2 seconds.
+   - Then show the final message for 5 seconds.
+   - Only after that, invoke the callback to reveal the "Next Question" button.
+*/
 function displayAffirmation(callback) {
-  // Hide the question text so the affirmation stands out
+  // Hide the question text to ensure the affirmation is clearly visible.
   questionTextEl.style.display = "none";
   
-  // Show loading ellipsis with bounce animation for 2 seconds
+  // Show bouncing ellipsis
   affirmationPopup.textContent = "...";
   affirmationPopup.classList.add("ellipsis");
   affirmationPopup.style.display = "block";
   
+  // After 2 seconds, show the final affirmation message.
   setTimeout(() => {
-    // Change to the final affirmation message and remove bounce animation
     affirmationPopup.textContent = affirmationMessage;
     affirmationPopup.classList.remove("ellipsis");
+    
+    // Keep the final message displayed for 5 seconds.
     setTimeout(() => {
       affirmationPopup.style.display = "none";
-      // Restore the question text
+      // Restore question text visibility.
       questionTextEl.style.display = "block";
       if (callback) callback();
-    }, 2000);
+    }, 5000);
   }, 2000);
 }
 
@@ -241,6 +248,7 @@ actionButton.onclick = function() {
     stopWaveAnimation();
     statusMessage.textContent = "Processing your answer...";
     displayAffirmation(function() {
+      // After the affirmation (5 seconds of final message), reveal the Next Question button.
       actionButton.textContent = "Next Question";
       statusMessage.textContent = "Click 'Next Question' to continue.";
       isAwaitingNext = true;
