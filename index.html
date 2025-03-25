@@ -190,7 +190,7 @@ function displayAffirmation(callback) {
   typeWriter("That's a very unique answer, you must be very disciplined to do that", affirmationBox, function() {
     // Keep the affirmation visible for 10 seconds.
     setTimeout(function() {
-      // Hide the affirmation box so it doesn't remain stagnant.
+      // Hide the affirmation box.
       affirmationBox.style.display = "none";
       callback();
     }, 10000);
@@ -249,11 +249,14 @@ actionButton.onclick = function() {
     // User indicates they're done with the question.
     stopWaveAnimation();
     statusMessage.textContent = "";
+    // Hide the "I'm Done" button immediately.
+    actionButton.style.display = "none";
     // Display affirmation in the feedback box using typewriter animation.
     displayAffirmation(function() {
       // After the affirmation has been visible for 10 seconds and then hidden,
-      // change the button text to "Next Question".
+      // change the button text to "Next Question" and show the button.
       actionButton.textContent = "Next Question";
+      actionButton.style.display = "block";
       statusMessage.textContent = "Click 'Next Question' to continue.";
       isAwaitingNext = true;
     });
