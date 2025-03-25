@@ -123,7 +123,7 @@
     </div>
     <p id="statusMessage"></p>
     <button id="actionButton">I'm Done</button>
-    <!-- Affirmation (feedback) message box -->
+    <!-- Affirmation message box -->
     <div id="affirmationBox"></div>
   </div>
 
@@ -178,18 +178,20 @@ function typeWriter(text, element, callback) {
 
 /* ========================= FEEDBACK DISPLAY ========================= */
 /* Display the affirmation message in the feedback box using typewriter animation.
-   The question text and the button remain visible.
+   The question text and button remain visible.
    After the message is fully typed and remains visible for 10 seconds,
-   invoke the callback to change the button to "Next Question".
+   hide the affirmation box and then invoke the callback to change the button to "Next Question".
 */
 function displayAffirmation(callback) {
-  // Show the affirmation box (in green) without hiding question text or button.
+  // Show the affirmation box (green) without hiding question text or button.
   affirmationBox.style.display = "block";
   
   // Start typewriter animation for the affirmation message.
   typeWriter("That's a very unique answer, you must be very disciplined to do that", affirmationBox, function() {
     // Keep the affirmation visible for 10 seconds.
     setTimeout(function() {
+      // Hide the affirmation box so it doesn't remain stagnant.
+      affirmationBox.style.display = "none";
       callback();
     }, 10000);
   });
@@ -249,7 +251,7 @@ actionButton.onclick = function() {
     statusMessage.textContent = "";
     // Display affirmation in the feedback box using typewriter animation.
     displayAffirmation(function() {
-      // After the affirmation has been visible for 10 seconds,
+      // After the affirmation has been visible for 10 seconds and then hidden,
       // change the button text to "Next Question".
       actionButton.textContent = "Next Question";
       statusMessage.textContent = "Click 'Next Question' to continue.";
