@@ -85,33 +85,18 @@
       color: #555;
       min-height: 24px;
     }
-    /* Centered affirmation area (no box, plain green text, bold) */
-    #affirmationPopup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: green;
-      font-size: 1.8em;
+    /* Feedback message styling */
+    #feedback {
+      font-size: 2em;
       font-weight: bold;
+      color: black;
+      margin: 20px 0;
       display: none;
-      text-align: center;
-    }
-    /* Bounce animation for ellipsis */
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    .ellipsis {
-      animation: bounce 1s infinite;
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <!-- Affirmation area (centered) -->
-  <div id="affirmationPopup"></div>
-
   <!-- 1) Welcome Screen -->
   <div id="welcomeScreen" class="screen active">
     <h2>Rapid-Fire Opinion Interview</h2>
@@ -130,7 +115,10 @@
       <div class="wave-bar"></div>
     </div>
     <p id="statusMessage"></p>
+    <!-- This button will serve both as "I'm Done" and "Next Question" -->
     <button id="actionButton">I'm Done</button>
+    <!-- Feedback message appears here -->
+    <div id="feedback">That's a very unique answer, you must be very disciplined to do that</div>
   </div>
 
   <!-- 3) Thank You Screen -->
@@ -157,74 +145,30 @@ const actionButton = document.getElementById("actionButton");
 const questionTextEl   = document.getElementById("questionText");
 const waveContainer    = document.getElementById("waveContainer");
 const statusMessage    = document.getElementById("statusMessage");
-const affirmationPopup = document.getElementById("affirmationPopup");
+const feedbackEl       = document.getElementById("feedback");
 
 /* ========================= STATE ========================= */
 let questionIndex = 0;
 let isAwaitingNext = false;
 let waveInterval  = null;
 
-/* ========================= AFFIRMATION ========================= */
-const affirmationMessage = "That's a very unique answer, you must be very disciplined to do that";
-
-/* Animate "Analyzing" with counting ellipsis for a given duration (ms) */
-function animateAnalyzing(duration, callback) {
-  const baseText = "Analyzing";
-  let dots = 0;
-  const maxDots = 3;
-  const interval = 500; // update every 500ms
-  const startTime = Date.now();
-  
-  const animInterval = setInterval(() => {
-    dots = (dots + 1) % (maxDots + 1);
-    affirmationPopup.textContent = baseText + ".".repeat(dots);
-    if (Date.now() - startTime >= duration) {
-      clearInterval(animInterval);
-      callback();
-    }
-  }, interval);
-}
-
-/* Typewriter animation for feedback text */
-function typeWriter(text, callback) {
-  let i = 0;
-  const speed = 50; // ms per letter
-  affirmationPopup.textContent = ""; // clear text
-  const interval = setInterval(() => {
-    if (i < text.length) {
-      affirmationPopup.textContent += text.charAt(i);
-      i++;
-    } else {
-      clearInterval(interval);
-      callback();
-    }
-  }, speed);
-}
-
-/* Display affirmation sequence:
-   1. Hide question text and button.
-   2. Show "Analyzing" with animated ellipsis for 2 seconds.
-   3. Then type out the feedback message (with typewriter animation).
-   4. Keep the feedback on screen for 10 seconds.
-   5. Finally, call the callback to reveal the Next Question button.
+/* ========================= FEEDBACK DISPLAY ========================= */
+/* Show the feedback immediately in large black text.
+   Keep it visible for 10 seconds, then invoke callback to reveal the "Next Question" button.
 */
-function displayAffirmation(callback) {
-  // Hide question text and action button for clarity.
+function displayFeedback(callback) {
+  // Hide question text and the action button.
   questionTextEl.style.display = "none";
   actionButton.style.display = "none";
+  statusMessage.textContent = "";
   
-  affirmationPopup.style.display = "block";
+  // Show the feedback message.
+  feedbackEl.style.display = "block";
   
-  // Step 1: Animate "Analyzing" for 2 seconds.
-  animateAnalyzing(2000, function() {
-    // Step 2: Typewriter the feedback (final affirmation) letter by letter.
-    typeWriter(affirmationMessage, function() {
-      // Step 3: Keep the final feedback on screen for 10 seconds.
-      setTimeout(function() {
-        callback();
-      }, 10000);
-    });
-  });
+  // Keep feedback on screen for 10 seconds.
+  setTimeout(() => {
+    callback();
+  }, 10000);
 }
 
 /* ========================= WAVE ANIMATION ========================= */
@@ -258,15 +202,16 @@ function showRapidQuestion(idx) {
     showScreen("thanksScreen");
     return;
   }
+  // Reset displays.
+  questionTextEl.style.display = "block";
+  actionButton.style.display = "block";
+  feedbackEl.style.display = "none";
+  
   // Prepare the question screen for a new question.
   questionTextEl.textContent = RAPID_QUESTIONS[idx];
   statusMessage.textContent = "Answer the question and click 'I'm Done' when finished.";
   actionButton.textContent = "I'm Done";
   isAwaitingNext = false;
-  // Reset displays
-  questionTextEl.style.display = "block";
-  actionButton.style.display = "block";
-  affirmationPopup.style.display = "none";
   startWaveAnimation();
 }
 
@@ -277,11 +222,13 @@ actionButton.onclick = function() {
   if (!isAwaitingNext) {
     // User indicates they're done with the question.
     stopWaveAnimation();
-    statusMessage.textContent = "Processing your answer...";
-    // Hide the button while the feedback animation runs.
-    actionButton.style.display = "none";
-    displayAffirmation(function() {
-      // After the feedback has been on-screen for 10 seconds, show the Next Question button.
+    // Remove any status message.
+    statusMessage.textContent = "";
+    // Show feedback message (immediately).
+    displayFeedback(function() {
+      // After 10 seconds, hide feedback and reveal the "Next Question" button.
+      feedbackEl.style.display = "none";
+      // Reveal "Next Question" button
       actionButton.textContent = "Next Question";
       actionButton.style.display = "block";
       statusMessage.textContent = "Click 'Next Question' to continue.";
