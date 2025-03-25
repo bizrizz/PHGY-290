@@ -86,12 +86,12 @@
       color: #555;
       min-height: 24px;
     }
-    /* Affirmation message box styling */
+    /* Affirmation (feedback) box styling: green background, white text */
     #affirmationBox {
       font-size: 1.5em;
       font-weight: bold;
-      color: black;
-      background-color: #f9f9f9;
+      color: white;
+      background-color: green;
       border: 1px solid #ccc;
       border-radius: 8px;
       padding: 15px;
@@ -123,7 +123,7 @@
     </div>
     <p id="statusMessage"></p>
     <button id="actionButton">I'm Done</button>
-    <!-- Affirmation message box -->
+    <!-- Affirmation (feedback) message box -->
     <div id="affirmationBox"></div>
   </div>
 
@@ -177,16 +177,16 @@ function typeWriter(text, element, callback) {
 }
 
 /* ========================= FEEDBACK DISPLAY ========================= */
-/* Show the affirmation message in the message box using typewriter animation.
-   The question remains on the screen.
+/* Display the affirmation message in the feedback box using typewriter animation.
+   The question text and the button remain visible.
    After the message is fully typed and remains visible for 10 seconds,
-   invoke callback to prompt the "Next Question" button.
+   invoke the callback to change the button to "Next Question".
 */
 function displayAffirmation(callback) {
-  // Ensure the affirmation box is visible.
+  // Show the affirmation box (in green) without hiding question text or button.
   affirmationBox.style.display = "block";
   
-  // Start typewriter animation for the affirmation.
+  // Start typewriter animation for the affirmation message.
   typeWriter("That's a very unique answer, you must be very disciplined to do that", affirmationBox, function() {
     // Keep the affirmation visible for 10 seconds.
     setTimeout(function() {
@@ -246,14 +246,12 @@ actionButton.onclick = function() {
   if (!isAwaitingNext) {
     // User indicates they're done with the question.
     stopWaveAnimation();
-    // Clear status message but keep question visible.
     statusMessage.textContent = "";
-    // Display affirmation message in the box with typewriter animation.
+    // Display affirmation in the feedback box using typewriter animation.
     displayAffirmation(function() {
       // After the affirmation has been visible for 10 seconds,
-      // prompt the "Next Question" button.
+      // change the button text to "Next Question".
       actionButton.textContent = "Next Question";
-      actionButton.style.display = "block";
       statusMessage.textContent = "Click 'Next Question' to continue.";
       isAwaitingNext = true;
     });
