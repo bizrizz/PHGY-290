@@ -17,12 +17,12 @@
     .container {
       width: 100%;
       height: 100%;
+      position: relative;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      position: relative;
-      box-sizing: border-box;
     }
     .screen {
       width: 100%;
@@ -85,18 +85,24 @@
       color: #555;
       min-height: 24px;
     }
-    /* Feedback message styling */
-    #feedback {
-      font-size: 2em;
+    /* Notification popup used for affirmation (typewriter animated) */
+    #notificationPopup {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      font-size: 2.5em;
       font-weight: bold;
       color: black;
-      margin: 20px 0;
       display: none;
+      text-align: left;
     }
   </style>
 </head>
 <body>
 <div class="container">
+  <!-- Notification Popup for affirmation -->
+  <div id="notificationPopup"></div>
+
   <!-- 1) Welcome Screen -->
   <div id="welcomeScreen" class="screen active">
     <h2>Rapid-Fire Opinion Interview</h2>
@@ -115,10 +121,7 @@
       <div class="wave-bar"></div>
     </div>
     <p id="statusMessage"></p>
-    <!-- This button will serve both as "I'm Done" and "Next Question" -->
     <button id="actionButton">I'm Done</button>
-    <!-- Feedback message appears here -->
-    <div id="feedback">That's a very unique answer, you must be very disciplined to do that</div>
   </div>
 
   <!-- 3) Thank You Screen -->
@@ -145,30 +148,53 @@ const actionButton = document.getElementById("actionButton");
 const questionTextEl   = document.getElementById("questionText");
 const waveContainer    = document.getElementById("waveContainer");
 const statusMessage    = document.getElementById("statusMessage");
-const feedbackEl       = document.getElementById("feedback");
+const notificationPopup = document.getElementById("notificationPopup");
 
 /* ========================= STATE ========================= */
 let questionIndex = 0;
 let isAwaitingNext = false;
 let waveInterval  = null;
 
-/* ========================= FEEDBACK DISPLAY ========================= */
-/* Show the feedback immediately in large black text.
-   Keep it visible for 10 seconds, then invoke callback to reveal the "Next Question" button.
+/* ========================= TYPEWRITER ANIMATION ========================= */
+function typeWriter(text, element, callback) {
+  let i = 0;
+  element.textContent = "";
+  const speed = 50; // ms per letter
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      element.textContent += text.charAt(i);
+      i++;
+    } else {
+      clearInterval(interval);
+      // Append a thumbs up emoji after the text is complete.
+      element.textContent += " 👍";
+      callback();
+    }
+  }, speed);
+}
+
+/* ========================= FEEDBACK DISPLAY (via notification popup) ========================= */
+/* When the user is done, hide question text and button, then show the affirmation message
+   in the notification popup using typewriter animation. The notification remains visible for
+   10 seconds before the Next Question button appears.
 */
-function displayFeedback(callback) {
-  // Hide question text and the action button.
+function displayAffirmation(callback) {
+  // Hide question text and button.
   questionTextEl.style.display = "none";
   actionButton.style.display = "none";
   statusMessage.textContent = "";
   
-  // Show the feedback message.
-  feedbackEl.style.display = "block";
+  // Show notification popup.
+  notificationPopup.style.display = "block";
   
-  // Keep feedback on screen for 10 seconds.
-  setTimeout(() => {
-    callback();
-  }, 10000);
+  // Start typewriter animation for the affirmation.
+  typeWriter("That's a very unique answer, you must be very disciplined to do that", notificationPopup, function() {
+    // Keep the affirmation visible for 10 seconds.
+    setTimeout(function() {
+      notificationPopup.style.display = "none";
+      callback();
+    }, 10000);
+  });
 }
 
 /* ========================= WAVE ANIMATION ========================= */
@@ -205,7 +231,7 @@ function showRapidQuestion(idx) {
   // Reset displays.
   questionTextEl.style.display = "block";
   actionButton.style.display = "block";
-  feedbackEl.style.display = "none";
+  notificationPopup.style.display = "none";
   
   // Prepare the question screen for a new question.
   questionTextEl.textContent = RAPID_QUESTIONS[idx];
@@ -222,16 +248,16 @@ actionButton.onclick = function() {
   if (!isAwaitingNext) {
     // User indicates they're done with the question.
     stopWaveAnimation();
-    // Remove any status message.
     statusMessage.textContent = "";
-    // Show feedback message (immediately).
-    displayFeedback(function() {
-      // After 10 seconds, hide feedback and reveal the "Next Question" button.
-      feedbackEl.style.display = "none";
-      // Reveal "Next Question" button
+    // Display affirmation in the notification popup with typewriter animation.
+    displayAffirmation(function() {
+      // After the affirmation has been visible for 10 seconds,
+      // hide the notification and reveal the "Next Question" button.
       actionButton.textContent = "Next Question";
       actionButton.style.display = "block";
       statusMessage.textContent = "Click 'Next Question' to continue.";
+      // Restore question text visibility (for next question).
+      questionTextEl.style.display = "block";
       isAwaitingNext = true;
     });
   } else {
