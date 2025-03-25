@@ -23,6 +23,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      padding: 20px;
     }
     .screen {
       width: 100%;
@@ -85,14 +86,17 @@
       color: #555;
       min-height: 24px;
     }
-    /* Notification popup used for affirmation (typewriter animated) */
-    #notificationPopup {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      font-size: 2.5em;
+    /* Affirmation message box styling */
+    #affirmationBox {
+      font-size: 1.5em;
       font-weight: bold;
       color: black;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      max-width: 80%;
       display: none;
       text-align: left;
     }
@@ -100,9 +104,6 @@
 </head>
 <body>
 <div class="container">
-  <!-- Notification Popup for affirmation -->
-  <div id="notificationPopup"></div>
-
   <!-- 1) Welcome Screen -->
   <div id="welcomeScreen" class="screen active">
     <h2>Rapid-Fire Opinion Interview</h2>
@@ -122,6 +123,8 @@
     </div>
     <p id="statusMessage"></p>
     <button id="actionButton">I'm Done</button>
+    <!-- Affirmation message box -->
+    <div id="affirmationBox"></div>
   </div>
 
   <!-- 3) Thank You Screen -->
@@ -148,7 +151,7 @@ const actionButton = document.getElementById("actionButton");
 const questionTextEl   = document.getElementById("questionText");
 const waveContainer    = document.getElementById("waveContainer");
 const statusMessage    = document.getElementById("statusMessage");
-const notificationPopup = document.getElementById("notificationPopup");
+const affirmationBox   = document.getElementById("affirmationBox");
 
 /* ========================= STATE ========================= */
 let questionIndex = 0;
@@ -173,25 +176,20 @@ function typeWriter(text, element, callback) {
   }, speed);
 }
 
-/* ========================= FEEDBACK DISPLAY (via notification popup) ========================= */
-/* When the user is done, hide question text and button, then show the affirmation message
-   in the notification popup using typewriter animation. The notification remains visible for
-   10 seconds before the Next Question button appears.
+/* ========================= FEEDBACK DISPLAY ========================= */
+/* Show the affirmation message in the message box using typewriter animation.
+   The question remains on the screen.
+   After the message is fully typed and remains visible for 10 seconds,
+   invoke callback to prompt the "Next Question" button.
 */
 function displayAffirmation(callback) {
-  // Hide question text and button.
-  questionTextEl.style.display = "none";
-  actionButton.style.display = "none";
-  statusMessage.textContent = "";
-  
-  // Show notification popup.
-  notificationPopup.style.display = "block";
+  // Ensure the affirmation box is visible.
+  affirmationBox.style.display = "block";
   
   // Start typewriter animation for the affirmation.
-  typeWriter("That's a very unique answer, you must be very disciplined to do that", notificationPopup, function() {
+  typeWriter("That's a very unique answer, you must be very disciplined to do that", affirmationBox, function() {
     // Keep the affirmation visible for 10 seconds.
     setTimeout(function() {
-      notificationPopup.style.display = "none";
       callback();
     }, 10000);
   });
@@ -231,7 +229,7 @@ function showRapidQuestion(idx) {
   // Reset displays.
   questionTextEl.style.display = "block";
   actionButton.style.display = "block";
-  notificationPopup.style.display = "none";
+  affirmationBox.style.display = "none";
   
   // Prepare the question screen for a new question.
   questionTextEl.textContent = RAPID_QUESTIONS[idx];
@@ -248,16 +246,15 @@ actionButton.onclick = function() {
   if (!isAwaitingNext) {
     // User indicates they're done with the question.
     stopWaveAnimation();
+    // Clear status message but keep question visible.
     statusMessage.textContent = "";
-    // Display affirmation in the notification popup with typewriter animation.
+    // Display affirmation message in the box with typewriter animation.
     displayAffirmation(function() {
       // After the affirmation has been visible for 10 seconds,
-      // hide the notification and reveal the "Next Question" button.
+      // prompt the "Next Question" button.
       actionButton.textContent = "Next Question";
       actionButton.style.display = "block";
       statusMessage.textContent = "Click 'Next Question' to continue.";
-      // Restore question text visibility (for next question).
-      questionTextEl.style.display = "block";
       isAwaitingNext = true;
     });
   } else {
